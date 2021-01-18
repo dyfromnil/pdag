@@ -2,14 +2,8 @@ package chain
 
 import (
 	"fmt"
+	cfg "github.com/dyfromnil/pdag/globleconfig"
 	cb "github.com/dyfromnil/pdag/proto-go/common"
-)
-
-const (
-	//PreferredMaxBytes is
-	PreferredMaxBytes = 1
-	//MaxMessageCount is
-	MaxMessageCount = 20
 )
 
 // Receiver defines a sink for the ordered broadcast messages
@@ -51,8 +45,8 @@ func NewReceiverImpl() Receiver {
 // Note that messageBatches can not be greater than 2.
 func (r *receiver) Ordered(msg *cb.Envelope) (messageBatches [][]*cb.Envelope, pending bool) {
 	messageSizeBytes := messageSizeBytes(msg)
-	if messageSizeBytes > PreferredMaxBytes {
-		fmt.Println("The current message, with ", messageSizeBytes, " bytes, is larger than the preferred batch size of ", PreferredMaxBytes, " bytes and will be isolated.")
+	if messageSizeBytes > cfg.PreferredMaxBytes {
+		fmt.Println("The current message, with ", messageSizeBytes, " bytes, is larger than the preferred batch size of ", cfg.PreferredMaxBytes, " bytes and will be isolated.")
 
 		// cut pending batch, if it has any messages
 		if len(r.pendingBatch) > 0 {
@@ -66,7 +60,7 @@ func (r *receiver) Ordered(msg *cb.Envelope) (messageBatches [][]*cb.Envelope, p
 		return
 	}
 
-	messageWillOverflowBatchSizeBytes := r.pendingBatchSizeBytes+messageSizeBytes > PreferredMaxBytes
+	messageWillOverflowBatchSizeBytes := r.pendingBatchSizeBytes+messageSizeBytes > cfg.PreferredMaxBytes
 
 	if messageWillOverflowBatchSizeBytes {
 		fmt.Println("The current message, with ", messageSizeBytes, " bytes, will overflow the pending batch of ", r.pendingBatchSizeBytes, " bytes.")
@@ -80,7 +74,7 @@ func (r *receiver) Ordered(msg *cb.Envelope) (messageBatches [][]*cb.Envelope, p
 	r.pendingBatchSizeBytes += messageSizeBytes
 	pending = true
 
-	if uint32(len(r.pendingBatch)) >= MaxMessageCount {
+	if uint32(len(r.pendingBatch)) >= cfg.MaxMessageCount {
 		fmt.Println("Batch size met, cutting batch")
 		messageBatch := r.Cut()
 		messageBatches = append(messageBatches, messageBatch)
