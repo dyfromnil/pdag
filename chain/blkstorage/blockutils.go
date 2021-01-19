@@ -1,17 +1,10 @@
-/*
-Copyright IBM Corp. All Rights Reserved.
-
-SPDX-License-Identifier: Apache-2.0
-*/
-
-package blockledger
+package blkstorage
 
 import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/asn1"
 	cb "github.com/dyfromnil/pdag/proto-go/common"
-	"github.com/golang/protobuf/proto"
 )
 
 // NewBlock constructs a block with no data and no metadata.
@@ -59,37 +52,4 @@ func BlocksHeaderHash(bs []*cb.BlockHeader) [][]byte {
 func BlockDataHash(b *cb.BlockData) []byte {
 	sum := sha256.Sum256(bytes.Join(b.Data, nil))
 	return sum[:]
-}
-
-// CreateNextBlock provides a utility way to construct the next block from
-// contents and metadata for a given ledger
-// XXX This will need to be modified to accept marshaled envelopes
-//     to accommodate non-deterministic marshaling
-func CreateNextBlock(rl Reader, messages []*cb.Envelope) *cb.Block {
-	var previousBlockHash [][]byte
-	var err error
-
-	blockHeaders := []*cb.BlockHeader{}
-	for _, bk := range rl.TipsBlock() {
-		blockHeaders = append(blockHeaders, bk.Header)
-	}
-
-	previousBlockHash = BlocksHeaderHash(blockHeaders)
-
-	data := &cb.BlockData{
-		Data: make([][]byte, len(messages)),
-	}
-
-	for i, msg := range messages {
-		data.Data[i], err = proto.Marshal(msg)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	block := NewBlock(previousBlockHash)
-	block.Header.DataHash = BlockDataHash(data)
-	block.Data = data
-
-	return block
 }
