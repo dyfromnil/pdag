@@ -25,7 +25,6 @@ func (client *Client) SendEnv(envCh chan<- cb.Envelope) {
 			j := 0
 			for {
 				envCh <- cb.Envelope{
-					User:      uint32(i0),
 					Payload:   []byte(fmt.Sprintf("This is User %d, message %d", i0, j)),
 					Signature: []byte(fmt.Sprintf("User %d", i0)),
 				}

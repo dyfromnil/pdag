@@ -9,13 +9,11 @@ option go_package = "proto-go/common";
 
 // Envelope wraps a Payload with a signature so that the message may be authenticated
 message Envelope {
-    uint32 user =1;
-    
     // A marshaled Payload
-    bytes payload = 2;
+    bytes payload = 1;
 
     // A signature by the creator specified in the Payload header
-    bytes signature = 3;
+    bytes signature = 2;
 }
 
 // This is finalized block structure to be shared among the orderer and peer
