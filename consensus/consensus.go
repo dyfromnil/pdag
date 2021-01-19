@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package consensus
 
 import (
-	"github.com/dyfromnil/pdag/chain"
+	"github.com/dyfromnil/pdag/chain/blockcutter"
 	cb "github.com/dyfromnil/pdag/proto-go/common"
 )
 
@@ -65,15 +65,14 @@ type ConsenterSupport interface {
 	// VerifyBlockSignature() error
 
 	// BlockCutter returns the block cutting helper for this channel.
-	BlockCutter() chain.Receiver
+	BlockCutter() blockcutter.Receiver
 
 	// CreateNextBlock takes a list of messages and creates the next block based on the block with highest block number committed to the ledger
 	// Note that either WriteBlock or WriteConfigBlock must be called before invoking this method a second time.
 	CreateNextBlock(messages []*cb.Envelope) *cb.Block
 
-	// Block returns a block with the given number,
-	// or nil if such a block doesn't exist.
-	Block(number uint64) *cb.Block
+	// Block returns blocks which are tips of ledger
+	TipsBlock() []*cb.Block
 
 	// WriteBlock commits a block to the ledger.
 	// WriteBlock(block *cb.Block, encodedMetadataValue []byte)

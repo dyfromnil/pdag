@@ -20,7 +20,6 @@ type chain struct {
 type message struct {
 	configSeq uint64
 	normalMsg *cb.Envelope
-	configMsg *cb.Envelope
 }
 
 // New creates a new consenter for the solo consensus scheme.
@@ -64,21 +63,7 @@ func (ch *chain) WaitReady() error {
 func (ch *chain) Order(env *cb.Envelope, configSeq uint64) error {
 	select {
 	case ch.sendChan <- &message{
-		configSeq: configSeq,
 		normalMsg: env,
-	}:
-		return nil
-	case <-ch.exitChan:
-		return fmt.Errorf("Exiting")
-	}
-}
-
-// Configure accepts configuration update messages for ordering
-func (ch *chain) Configure(config *cb.Envelope, configSeq uint64) error {
-	select {
-	case ch.sendChan <- &message{
-		configSeq: configSeq,
-		configMsg: config,
 	}:
 		return nil
 	case <-ch.exitChan:
