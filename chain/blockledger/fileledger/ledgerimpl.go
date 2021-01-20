@@ -2,14 +2,14 @@ package fileledger
 
 import (
 	"github.com/dyfromnil/pdag/chain/blkstorage"
-
 	cb "github.com/dyfromnil/pdag/proto-go/common"
+	"github.com/golang/protobuf/proto"
 )
 
 // FileLedger is a struct used to interact with a node's ledger
 type FileLedger struct {
 	blockStore BlockStore
-	signal     chan struct{}
+	// signal     chan struct{}
 }
 
 // BlockStore defines the interface to interact with deliver when using a
@@ -21,7 +21,8 @@ type BlockStore interface {
 
 // NewFileLedger creates a new FileLedger for interaction with the ledger
 func NewFileLedger(blockStore BlockStore) *FileLedger {
-	return &FileLedger{blockStore: blockStore, signal: make(chan struct{})}
+	// return &FileLedger{blockStore: blockStore, signal: make(chan struct{})}
+	return &FileLedger{blockStore: blockStore}
 }
 
 //TipsBlock for
@@ -32,10 +33,10 @@ func (fl *FileLedger) TipsBlock() []*cb.Block {
 // Append a new block to the ledger
 func (fl *FileLedger) Append(block *cb.Block, tips []*cb.Block) error {
 	err := fl.blockStore.AddBlock(block, tips)
-	if err == nil {
-		close(fl.signal)
-		fl.signal = make(chan struct{})
-	}
+	// if err == nil {
+	// 	close(fl.signal)
+	// 	fl.signal = make(chan struct{})
+	// }
 	return err
 }
 
@@ -53,7 +54,7 @@ func (fl *FileLedger) CreateNextBlock(messages []*cb.Envelope) (*cb.Block, []*cb
 		blockHeaders = append(blockHeaders, bk.Header)
 	}
 
-	previousBlockHash = BlocksHeaderHash(blockHeaders)
+	previousBlockHash = blkstorage.BlocksHeaderHash(blockHeaders)
 
 	data := &cb.BlockData{
 		Data: make([][]byte, len(messages)),
@@ -66,8 +67,8 @@ func (fl *FileLedger) CreateNextBlock(messages []*cb.Envelope) (*cb.Block, []*cb
 		}
 	}
 
-	block := NewBlock(previousBlockHash)
-	block.Header.DataHash = BlockDataHash(data)
+	block := blkstorage.NewBlock(previousBlockHash)
+	block.Header.DataHash = blkstorage.BlockDataHash(data)
 	block.Data = data
 
 	return block, tipsList

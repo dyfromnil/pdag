@@ -68,9 +68,9 @@ At start up a new manager:
 		-- If index and file system are not in sync, syncs index from the FS
   *)  Updates blockchain info used by the APIs
 */
-func newBlockfileMgr(id string, conf *Conf) (*blockfileMgr, error) {
-	fmt.Printf("newBlockfileMgr() initializing file-based block storage for ledger: %s ", id)
-	rootDir := conf.getLedgerBlockDir(id)
+func newBlockfileMgr(conf *Conf) (*blockfileMgr, error) {
+	fmt.Println("newBlockfileMgr() initializing file-based block storage for ledger")
+	rootDir := conf.getLedgerBlockDir()
 	_, err := CreateDirIfMissing(rootDir)
 	if err != nil {
 		panic(fmt.Sprintf("Error creating block storage root dir [%s]: %s", rootDir, err))

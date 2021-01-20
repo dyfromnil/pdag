@@ -45,6 +45,8 @@ func NewReceiverImpl() Receiver {
 // Note that messageBatches can not be greater than 2.
 func (r *receiver) Ordered(msg *cb.Envelope) (messageBatches [][]*cb.Envelope, pending bool) {
 	messageSizeBytes := messageSizeBytes(msg)
+	// fmt.Println("messageSizeBytes:", messageSizeBytes)
+
 	if messageSizeBytes > cfg.PreferredMaxBytes {
 		fmt.Println("The current message, with ", messageSizeBytes, " bytes, is larger than the preferred batch size of ", cfg.PreferredMaxBytes, " bytes and will be isolated.")
 
@@ -56,7 +58,6 @@ func (r *receiver) Ordered(msg *cb.Envelope) (messageBatches [][]*cb.Envelope, p
 
 		// create new batch with single message
 		messageBatches = append(messageBatches, []*cb.Envelope{msg})
-
 		return
 	}
 
@@ -69,7 +70,7 @@ func (r *receiver) Ordered(msg *cb.Envelope) (messageBatches [][]*cb.Envelope, p
 		messageBatches = append(messageBatches, messageBatch)
 	}
 
-	fmt.Println("Enqueuing message into batch")
+	// fmt.Println("Enqueuing message into batch")
 	r.pendingBatch = append(r.pendingBatch, msg)
 	r.pendingBatchSizeBytes += messageSizeBytes
 	pending = true

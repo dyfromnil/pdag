@@ -45,6 +45,10 @@ func BlocksHeaderHash(bs []*cb.BlockHeader) [][]byte {
 		sum := sha256.Sum256(BlockHeaderBytes(bh))
 		blocksHeaderHash = append(blocksHeaderHash, sum[:])
 	}
+	if len(blocksHeaderHash) == 0 {
+		gensisBytes := sha256.Sum256([]byte("gensis block"))
+		blocksHeaderHash = append(blocksHeaderHash, gensisBytes[:])
+	}
 	return blocksHeaderHash
 }
 

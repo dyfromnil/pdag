@@ -10,9 +10,9 @@ type BlockStore struct {
 	fileMgr *blockfileMgr
 }
 
-// newBlockStore constructs a `BlockStore`
-func newBlockStore(id string, conf *Conf) (*BlockStore, error) {
-	fileMgr, err := newBlockfileMgr(id, conf)
+// NewBlockStore constructs a `BlockStore`
+func NewBlockStore(conf *Conf) (*BlockStore, error) {
+	fileMgr, err := newBlockfileMgr(conf)
 	if err != nil {
 		return nil, err
 	}

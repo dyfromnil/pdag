@@ -33,6 +33,6 @@ func (conf *Conf) getChainsDir() string {
 	return filepath.Join(conf.blockStorageDir, globleconfig.ChainsDir)
 }
 
-func (conf *Conf) getLedgerBlockDir(ledgerid string) string {
-	return filepath.Join(conf.getChainsDir(), ledgerid)
+func (conf *Conf) getLedgerBlockDir() string {
+	return conf.getChainsDir()
 }

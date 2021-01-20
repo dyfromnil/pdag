@@ -8,19 +8,24 @@ import (
 
 //Support for
 type Support struct {
-	ledger      blockledger.ReadWriter
-	blockcutter blockcutter.Receiver
+	blockledger.ReadWriter
+	blockcutter.Receiver
 }
 
 //NewSupport for
-func NewSupport(lg blockledger.ReadWriter, bc blockcutter.Receiver) *Support {
+func NewSupport(lg blockledger.ReadWriter) *Support {
 	return &Support{
-		ledger:      lg,
-		blockcutter: bc,
+		ReadWriter: lg,
+		Receiver:   blockcutter.NewReceiverImpl(),
 	}
 }
 
 //CreateNextBlock for
-func (s *Support) CreateNextBlock(messages []*cb.Envelope) *cb.Block {
-	return s.ledger.CreateNextBlock(messages)
+func (s *Support) CreateNextBlock(messages []*cb.Envelope) (*cb.Block, []*cb.Block) {
+	return s.ReadWriter.CreateNextBlock(messages)
+}
+
+//BlockCutter for
+func (s *Support) BlockCutter() blockcutter.Receiver {
+	return s.Receiver
 }
