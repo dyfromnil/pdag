@@ -33,7 +33,7 @@ type Chain interface {
 	// If the configSeq advances, it is the responsibility of the consenter
 	// to revalidate and potentially discard the message
 	// The consenter may return an error, indicating the message was not accepted
-	Order(env *cb.Envelope, configSeq uint64) error
+	Order(env *cb.Envelope) error
 
 	// WaitReady blocks waiting for consenter to be ready for accepting new messages.
 	// This is useful when consenter needs to temporarily block ingress messages so
@@ -69,7 +69,7 @@ type ConsenterSupport interface {
 
 	// CreateNextBlock takes a list of messages and creates the next block based on the block with highest block number committed to the ledger
 	// Note that either WriteBlock or WriteConfigBlock must be called before invoking this method a second time.
-	CreateNextBlock(messages []*cb.Envelope) *cb.Block
+	CreateNextBlock(messages []*cb.Envelope) (*cb.Block, []*cb.Block)
 
 	// Block returns blocks which are tips of ledger
 	TipsBlock() []*cb.Block
@@ -79,5 +79,5 @@ type ConsenterSupport interface {
 
 	// Append appends a new block to the ledger in its raw form,
 	// unlike WriteBlock that also mutates its metadata.
-	Append(block *cb.Block) error
+	Append(block *cb.Block, tips []*cb.Block) error
 }

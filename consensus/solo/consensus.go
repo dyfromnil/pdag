@@ -2,11 +2,13 @@ package solo
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/dyfromnil/pdag/consensus"
-	cfg "github.com/dyfromnil/pdag/globleconfig"
+	// cfg "github.com/dyfromnil/pdag/globleconfig"
 	cb "github.com/dyfromnil/pdag/proto-go/common"
+	"math/rand"
 )
 
 type consenter struct{}
@@ -18,7 +20,6 @@ type chain struct {
 }
 
 type message struct {
-	configSeq uint64
 	normalMsg *cb.Envelope
 }
 
@@ -60,7 +61,7 @@ func (ch *chain) WaitReady() error {
 }
 
 // Order accepts normal messages for ordering
-func (ch *chain) Order(env *cb.Envelope, configSeq uint64) error {
+func (ch *chain) Order(env *cb.Envelope) error {
 	select {
 	case ch.sendChan <- &message{
 		normalMsg: env,
@@ -77,47 +78,82 @@ func (ch *chain) Errored() <-chan struct{} {
 }
 
 func (ch *chain) main() {
-	var timer <-chan time.Time
+	// var timer <-chan time.Time
 
-	for {
-		select {
-		case msg := <-ch.sendChan:
-			batches, pending := ch.support.BlockCutter().Ordered(msg.normalMsg)
+	// for {
+	// 	select {
+	// 	case msg := <-ch.sendChan:
+	// 		batches, pending := ch.support.BlockCutter().Ordered(msg.normalMsg)
+
+	// 		for _, batch := range batches {
+	// 			block, tipsList := ch.support.CreateNextBlock(batch)
+	// 			fmt.Println("num of tips:", len(tipsList))
+	// 			time.Sleep(time.Second)
+	// 			ch.support.Append(block, tipsList)
+	// 		}
+
+	// 		switch {
+	// 		case timer != nil && !pending:
+	// 			// Timer is already running but there are no messages pending, stop the timer
+	// 			timer = nil
+	// 		case timer == nil && pending:
+	// 			// Timer is not already running and there are messages pending, so start it
+	// 			timer = time.After(time.Duration(time.Second * cfg.BatchTimeOut))
+	// 		default:
+	// 			// Do nothing when:
+	// 			// 1. Timer is already running and there are messages pending
+	// 			// 2. Timer is not set and there are no messages pending
+	// 		}
+
+	// 	case <-timer:
+	// 		//clear the timer
+	// 		timer = nil
+
+	// 		batch := ch.support.BlockCutter().Cut()
+	// 		if len(batch) == 0 {
+	// 			fmt.Println("Batch timer expired with no pending requests, this might indicate a bug")
+	// 			continue
+	// 		}
+	// 		fmt.Println("Batch timer expired, creating block")
+	// 		block, tipsList := ch.support.CreateNextBlock(batch)
+	// 		ch.support.Append(block, tipsList)
+	// 	case <-ch.exitChan:
+	// 		fmt.Println("Exiting")
+	// 		return
+	// 	}
+	// }
+	rand.Seed(time.Now().Unix())
+	batchCh := make(chan []*cb.Envelope, 200)
+
+	//make batch and send it to batch chan
+	go func() {
+		for {
+			msg := <-ch.sendChan
+			batches, _ := ch.support.BlockCutter().Ordered(msg.normalMsg)
 
 			for _, batch := range batches {
-				block := ch.support.CreateNextBlock(batch)
-				ch.support.Append(block)
+				batchCh <- batch
 			}
-
-			switch {
-			case timer != nil && !pending:
-				// Timer is already running but there are no messages pending, stop the timer
-				timer = nil
-			case timer == nil && pending:
-				// Timer is not already running and there are messages pending, so start it
-				timer = time.After(time.Duration(time.Second * cfg.BatchTimeOut))
-			default:
-				// Do nothing when:
-				// 1. Timer is already running and there are messages pending
-				// 2. Timer is not set and there are no messages pending
-			}
-
-		case <-timer:
-			//clear the timer
-			timer = nil
-
-			batch := ch.support.BlockCutter().Cut()
-			if len(batch) == 0 {
-				fmt.Println("Batch timer expired with no pending requests, this might indicate a bug")
-				continue
-			}
-			fmt.Println("Batch timer expired, creating block")
-			block := ch.support.CreateNextBlock(batch)
-			// ch.support.WriteBlock(block, nil)
-			ch.support.Append(block)
-		case <-ch.exitChan:
-			fmt.Println("Exiting")
-			return
 		}
+	}()
+
+	go createWorkerPool(10, batchCh, ch)
+}
+
+func worker(wg *sync.WaitGroup, batchCh chan []*cb.Envelope, ch *chain) {
+	defer wg.Done()
+	for batch := range batchCh {
+		block, tipsList := ch.support.CreateNextBlock(batch)
+		fmt.Println("num of tips:", len(tipsList))
+		time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)*4+300))
+		ch.support.Append(block, tipsList)
 	}
+}
+func createWorkerPool(numOfWorkers int, batchCh chan []*cb.Envelope, ch *chain) {
+	var wg sync.WaitGroup
+	for i := 0; i < numOfWorkers; i++ {
+		wg.Add(1)
+		go worker(&wg, batchCh, ch)
+	}
+	wg.Wait()
 }
