@@ -3,5 +3,5 @@ dag:
 	protoc --go_out=plugins=grpc:. ./blockproto/block.proto
 
 run:
-	rm -rf chainStore
+	rm -rf store
 	go run cmd/main.go
