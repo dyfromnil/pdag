@@ -2,6 +2,6 @@ package main
 
 import "github.com/dyfromnil/pdag/node"
 
-func(){
+func main() {
 	node.Main()
 }
