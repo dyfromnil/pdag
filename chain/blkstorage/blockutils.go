@@ -3,6 +3,7 @@ package blkstorage
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/hex"
 
 	"github.com/golang/protobuf/proto"
 
@@ -24,6 +25,12 @@ func BlockHeaderBytes(b *cb.BlockHeader) []byte {
 		panic(err)
 	}
 	return result
+}
+
+//BlockHeaderDigest for
+func BlockHeaderDigest(b *cb.BlockHeader) string {
+	sum := sha256.Sum256(BlockHeaderBytes(b))
+	return hex.EncodeToString(sum[:])
 }
 
 //BlocksHeaderHash for

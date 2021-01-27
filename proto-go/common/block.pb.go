@@ -557,7 +557,7 @@ var file_blockproto_block_proto_rawDesc = []byte{
 	0x07, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f,
 	0x6e, 0x2e, 0x45, 0x6e, 0x76, 0x65, 0x6c, 0x6f, 0x70, 0x65, 0x1a, 0x10, 0x2e, 0x63, 0x6f, 0x6d,
 	0x6d, 0x6f, 0x6e, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x28, 0x01,
-	0x30, 0x01, 0x32, 0xa3, 0x01, 0x0a, 0x04, 0x70, 0x62, 0x66, 0x74, 0x12, 0x37, 0x0a, 0x0a, 0x50,
+	0x30, 0x01, 0x32, 0xa3, 0x01, 0x0a, 0x04, 0x50, 0x62, 0x66, 0x74, 0x12, 0x37, 0x0a, 0x0a, 0x50,
 	0x72, 0x65, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65, 0x12, 0x15, 0x2e, 0x63, 0x6f, 0x6d, 0x6d,
 	0x6f, 0x6e, 0x2e, 0x50, 0x72, 0x65, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65, 0x4d, 0x73, 0x67,
 	0x1a, 0x10, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
@@ -600,13 +600,13 @@ var file_blockproto_block_proto_depIdxs = []int32{
 	3, // 1: common.Block.data:type_name -> common.BlockData
 	1, // 2: common.PrePrepareMsg.block:type_name -> common.Block
 	0, // 3: common.SendEnvelops.Request:input_type -> common.Envelope
-	4, // 4: common.pbft.PrePrepare:input_type -> common.PrePrepareMsg
-	5, // 5: common.pbft.Prepare:input_type -> common.PrepareMsg
-	6, // 6: common.pbft.Commit:input_type -> common.CommitMsg
+	4, // 4: common.Pbft.PrePrepare:input_type -> common.PrePrepareMsg
+	5, // 5: common.Pbft.Prepare:input_type -> common.PrepareMsg
+	6, // 6: common.Pbft.Commit:input_type -> common.CommitMsg
 	7, // 7: common.SendEnvelops.Request:output_type -> common.Response
-	7, // 8: common.pbft.PrePrepare:output_type -> common.Response
-	7, // 9: common.pbft.Prepare:output_type -> common.Response
-	7, // 10: common.pbft.Commit:output_type -> common.Response
+	7, // 8: common.Pbft.PrePrepare:output_type -> common.Response
+	7, // 9: common.Pbft.Prepare:output_type -> common.Response
+	7, // 10: common.Pbft.Commit:output_type -> common.Response
 	7, // [7:11] is the sub-list for method output_type
 	3, // [3:7] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
@@ -868,7 +868,7 @@ func NewPbftClient(cc grpc.ClientConnInterface) PbftClient {
 
 func (c *pbftClient) PrePrepare(ctx context.Context, in *PrePrepareMsg, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
-	err := c.cc.Invoke(ctx, "/common.pbft/PrePrepare", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/common.Pbft/PrePrepare", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -877,7 +877,7 @@ func (c *pbftClient) PrePrepare(ctx context.Context, in *PrePrepareMsg, opts ...
 
 func (c *pbftClient) Prepare(ctx context.Context, in *PrepareMsg, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
-	err := c.cc.Invoke(ctx, "/common.pbft/Prepare", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/common.Pbft/Prepare", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -886,7 +886,7 @@ func (c *pbftClient) Prepare(ctx context.Context, in *PrepareMsg, opts ...grpc.C
 
 func (c *pbftClient) Commit(ctx context.Context, in *CommitMsg, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
-	err := c.cc.Invoke(ctx, "/common.pbft/Commit", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/common.Pbft/Commit", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -928,7 +928,7 @@ func _Pbft_PrePrepare_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/common.pbft/PrePrepare",
+		FullMethod: "/common.Pbft/PrePrepare",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PbftServer).PrePrepare(ctx, req.(*PrePrepareMsg))
@@ -946,7 +946,7 @@ func _Pbft_Prepare_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/common.pbft/Prepare",
+		FullMethod: "/common.Pbft/Prepare",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PbftServer).Prepare(ctx, req.(*PrepareMsg))
@@ -964,7 +964,7 @@ func _Pbft_Commit_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/common.pbft/Commit",
+		FullMethod: "/common.Pbft/Commit",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PbftServer).Commit(ctx, req.(*CommitMsg))
@@ -973,7 +973,7 @@ func _Pbft_Commit_Handler(srv interface{}, ctx context.Context, dec func(interfa
 }
 
 var _Pbft_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "common.pbft",
+	ServiceName: "common.Pbft",
 	HandlerType: (*PbftServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

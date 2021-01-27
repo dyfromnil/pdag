@@ -25,6 +25,8 @@ type IdentityProvider interface {
 	RsaVerySignWithSha256(data, signData, keyBytes []byte) bool
 	GetPubKey(nodeID string) []byte
 	GetPivKey(nodeID string) []byte
+	GetSelfPivKey() []byte
+	GetSelfPubKey() []byte
 	GetClusterAddrs() map[string]string
 	GetNodeID() string
 	GetAddr() string
@@ -197,6 +199,16 @@ func getPivKey(nodeID string) []byte {
 		log.Panic(err)
 	}
 	return key
+}
+
+//GetSelfPivKey for
+func (iden *Identity) GetSelfPivKey() []byte {
+	return iden.rsaPrivKey
+}
+
+//GetSelfPubKey for
+func (iden *Identity) GetSelfPubKey() []byte {
+	return iden.rsaPubKey
 }
 
 // GetClusterAddrs for
