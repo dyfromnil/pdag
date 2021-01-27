@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
+	"net"
 	"time"
 
 	"google.golang.org/grpc"
@@ -44,8 +46,34 @@ func (client *Client) SendEnv(envCh chan<- cb.Envelope) {
 	}
 }
 
+//客户端使用的tcp监听
+func clientTCPListen() {
+	listen, err := net.Listen("tcp", globleconfig.ClientAddr)
+	if err != nil {
+		log.Panic(err)
+	}
+	defer listen.Close()
+
+	for {
+		conn, err := listen.Accept()
+		if err != nil {
+			log.Panic(err)
+		}
+		b, err := ioutil.ReadAll(conn)
+		if err != nil {
+			log.Panic(err)
+		}
+		fmt.Println(string(b))
+	}
+
+}
+
 func main() {
 	fmt.Println("Client start...")
+
+	go clientTCPListen()
+	log.Printf("客户端开启监听，地址：%s\n", globleconfig.ClientAddr)
+
 	envCh := make(chan cb.Envelope, 200)
 
 	clt := NewClient(3)

@@ -34,6 +34,6 @@ func (s *Support) BlockCutter() blockcutter.Receiver {
 }
 
 //GetIdendity for
-func (s *Support) GetIdendity() *msp.IdentityProvider {
-	return &s.IdentityProvider
+func (s *Support) GetIdendity() msp.IdentityProvider {
+	return s.IdentityProvider
 }

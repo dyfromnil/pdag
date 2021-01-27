@@ -278,7 +278,7 @@ type PrePrepareMsg struct {
 
 	Block *Block `protobuf:"bytes,1,opt,name=block,proto3" json:"block,omitempty"`
 	//digest is the blockheader hash
-	Digest []byte `protobuf:"bytes,2,opt,name=digest,proto3" json:"digest,omitempty"`
+	Digest string `protobuf:"bytes,2,opt,name=digest,proto3" json:"digest,omitempty"`
 	Sign   []byte `protobuf:"bytes,3,opt,name=sign,proto3" json:"sign,omitempty"`
 }
 
@@ -321,11 +321,11 @@ func (x *PrePrepareMsg) GetBlock() *Block {
 	return nil
 }
 
-func (x *PrePrepareMsg) GetDigest() []byte {
+func (x *PrePrepareMsg) GetDigest() string {
 	if x != nil {
 		return x.Digest
 	}
-	return nil
+	return ""
 }
 
 func (x *PrePrepareMsg) GetSign() []byte {
@@ -340,7 +340,7 @@ type PrepareMsg struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Digest []byte `protobuf:"bytes,1,opt,name=digest,proto3" json:"digest,omitempty"`
+	Digest string `protobuf:"bytes,1,opt,name=digest,proto3" json:"digest,omitempty"`
 	Sign   []byte `protobuf:"bytes,2,opt,name=sign,proto3" json:"sign,omitempty"`
 	NodeID string `protobuf:"bytes,3,opt,name=nodeID,proto3" json:"nodeID,omitempty"`
 }
@@ -377,11 +377,11 @@ func (*PrepareMsg) Descriptor() ([]byte, []int) {
 	return file_blockproto_block_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *PrepareMsg) GetDigest() []byte {
+func (x *PrepareMsg) GetDigest() string {
 	if x != nil {
 		return x.Digest
 	}
-	return nil
+	return ""
 }
 
 func (x *PrepareMsg) GetSign() []byte {
@@ -403,7 +403,7 @@ type CommitMsg struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Digest []byte `protobuf:"bytes,1,opt,name=digest,proto3" json:"digest,omitempty"`
+	Digest string `protobuf:"bytes,1,opt,name=digest,proto3" json:"digest,omitempty"`
 	Sign   []byte `protobuf:"bytes,2,opt,name=sign,proto3" json:"sign,omitempty"`
 	NodeID string `protobuf:"bytes,3,opt,name=nodeID,proto3" json:"nodeID,omitempty"`
 }
@@ -440,11 +440,11 @@ func (*CommitMsg) Descriptor() ([]byte, []int) {
 	return file_blockproto_block_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *CommitMsg) GetDigest() []byte {
+func (x *CommitMsg) GetDigest() string {
 	if x != nil {
 		return x.Digest
 	}
-	return nil
+	return ""
 }
 
 func (x *CommitMsg) GetSign() []byte {
@@ -538,16 +538,16 @@ var file_blockproto_block_proto_rawDesc = []byte{
 	0x4d, 0x73, 0x67, 0x12, 0x23, 0x0a, 0x05, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x0b, 0x32, 0x0d, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x42, 0x6c, 0x6f, 0x63,
 	0x6b, 0x52, 0x05, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x16, 0x0a, 0x06, 0x64, 0x69, 0x67, 0x65,
-	0x73, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x06, 0x64, 0x69, 0x67, 0x65, 0x73, 0x74,
+	0x73, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x64, 0x69, 0x67, 0x65, 0x73, 0x74,
 	0x12, 0x12, 0x0a, 0x04, 0x73, 0x69, 0x67, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04,
 	0x73, 0x69, 0x67, 0x6e, 0x22, 0x50, 0x0a, 0x0a, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65, 0x4d,
 	0x73, 0x67, 0x12, 0x16, 0x0a, 0x06, 0x64, 0x69, 0x67, 0x65, 0x73, 0x74, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x0c, 0x52, 0x06, 0x64, 0x69, 0x67, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x73, 0x69,
+	0x28, 0x09, 0x52, 0x06, 0x64, 0x69, 0x67, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x73, 0x69,
 	0x67, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x73, 0x69, 0x67, 0x6e, 0x12, 0x16,
 	0x0a, 0x06, 0x6e, 0x6f, 0x64, 0x65, 0x49, 0x44, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
 	0x6e, 0x6f, 0x64, 0x65, 0x49, 0x44, 0x22, 0x4f, 0x0a, 0x09, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74,
 	0x4d, 0x73, 0x67, 0x12, 0x16, 0x0a, 0x06, 0x64, 0x69, 0x67, 0x65, 0x73, 0x74, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0c, 0x52, 0x06, 0x64, 0x69, 0x67, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x73,
+	0x01, 0x28, 0x09, 0x52, 0x06, 0x64, 0x69, 0x67, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x73,
 	0x69, 0x67, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x73, 0x69, 0x67, 0x6e, 0x12,
 	0x16, 0x0a, 0x06, 0x6e, 0x6f, 0x64, 0x65, 0x49, 0x44, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x06, 0x6e, 0x6f, 0x64, 0x65, 0x49, 0x44, 0x22, 0x24, 0x0a, 0x08, 0x52, 0x65, 0x73, 0x70, 0x6f,
@@ -557,19 +557,20 @@ var file_blockproto_block_proto_rawDesc = []byte{
 	0x07, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f,
 	0x6e, 0x2e, 0x45, 0x6e, 0x76, 0x65, 0x6c, 0x6f, 0x70, 0x65, 0x1a, 0x10, 0x2e, 0x63, 0x6f, 0x6d,
 	0x6d, 0x6f, 0x6e, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x28, 0x01,
-	0x30, 0x01, 0x32, 0xa3, 0x01, 0x0a, 0x04, 0x50, 0x62, 0x66, 0x74, 0x12, 0x37, 0x0a, 0x0a, 0x50,
-	0x72, 0x65, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65, 0x12, 0x15, 0x2e, 0x63, 0x6f, 0x6d, 0x6d,
-	0x6f, 0x6e, 0x2e, 0x50, 0x72, 0x65, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65, 0x4d, 0x73, 0x67,
-	0x1a, 0x10, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x00, 0x12, 0x31, 0x0a, 0x07, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65, 0x12,
-	0x12, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65,
-	0x4d, 0x73, 0x67, 0x1a, 0x10, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x2f, 0x0a, 0x06, 0x43, 0x6f, 0x6d, 0x6d, 0x69,
-	0x74, 0x12, 0x11, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69,
-	0x74, 0x4d, 0x73, 0x67, 0x1a, 0x10, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x11, 0x5a, 0x0f, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x2d, 0x67, 0x6f, 0x2f, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x30, 0x01, 0x32, 0xb5, 0x01, 0x0a, 0x04, 0x50, 0x62, 0x66, 0x74, 0x12, 0x3d, 0x0a, 0x10, 0x48,
+	0x61, 0x6e, 0x64, 0x6c, 0x65, 0x50, 0x72, 0x65, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65, 0x12,
+	0x15, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x50, 0x72, 0x65, 0x50, 0x72, 0x65, 0x70,
+	0x61, 0x72, 0x65, 0x4d, 0x73, 0x67, 0x1a, 0x10, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x37, 0x0a, 0x0d, 0x48, 0x61,
+	0x6e, 0x64, 0x6c, 0x65, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65, 0x12, 0x12, 0x2e, 0x63, 0x6f,
+	0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65, 0x4d, 0x73, 0x67, 0x1a,
+	0x10, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x00, 0x12, 0x35, 0x0a, 0x0c, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x43, 0x6f, 0x6d,
+	0x6d, 0x69, 0x74, 0x12, 0x11, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x43, 0x6f, 0x6d,
+	0x6d, 0x69, 0x74, 0x4d, 0x73, 0x67, 0x1a, 0x10, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x11, 0x5a, 0x0f, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x2d, 0x67, 0x6f, 0x2f, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -600,13 +601,13 @@ var file_blockproto_block_proto_depIdxs = []int32{
 	3, // 1: common.Block.data:type_name -> common.BlockData
 	1, // 2: common.PrePrepareMsg.block:type_name -> common.Block
 	0, // 3: common.SendEnvelops.Request:input_type -> common.Envelope
-	4, // 4: common.Pbft.PrePrepare:input_type -> common.PrePrepareMsg
-	5, // 5: common.Pbft.Prepare:input_type -> common.PrepareMsg
-	6, // 6: common.Pbft.Commit:input_type -> common.CommitMsg
+	4, // 4: common.Pbft.HandlePrePrepare:input_type -> common.PrePrepareMsg
+	5, // 5: common.Pbft.HandlePrepare:input_type -> common.PrepareMsg
+	6, // 6: common.Pbft.HandleCommit:input_type -> common.CommitMsg
 	7, // 7: common.SendEnvelops.Request:output_type -> common.Response
-	7, // 8: common.Pbft.PrePrepare:output_type -> common.Response
-	7, // 9: common.Pbft.Prepare:output_type -> common.Response
-	7, // 10: common.Pbft.Commit:output_type -> common.Response
+	7, // 8: common.Pbft.HandlePrePrepare:output_type -> common.Response
+	7, // 9: common.Pbft.HandlePrepare:output_type -> common.Response
+	7, // 10: common.Pbft.HandleCommit:output_type -> common.Response
 	7, // [7:11] is the sub-list for method output_type
 	3, // [3:7] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
@@ -853,9 +854,9 @@ var _SendEnvelops_serviceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type PbftClient interface {
-	PrePrepare(ctx context.Context, in *PrePrepareMsg, opts ...grpc.CallOption) (*Response, error)
-	Prepare(ctx context.Context, in *PrepareMsg, opts ...grpc.CallOption) (*Response, error)
-	Commit(ctx context.Context, in *CommitMsg, opts ...grpc.CallOption) (*Response, error)
+	HandlePrePrepare(ctx context.Context, in *PrePrepareMsg, opts ...grpc.CallOption) (*Response, error)
+	HandlePrepare(ctx context.Context, in *PrepareMsg, opts ...grpc.CallOption) (*Response, error)
+	HandleCommit(ctx context.Context, in *CommitMsg, opts ...grpc.CallOption) (*Response, error)
 }
 
 type pbftClient struct {
@@ -866,27 +867,27 @@ func NewPbftClient(cc grpc.ClientConnInterface) PbftClient {
 	return &pbftClient{cc}
 }
 
-func (c *pbftClient) PrePrepare(ctx context.Context, in *PrePrepareMsg, opts ...grpc.CallOption) (*Response, error) {
+func (c *pbftClient) HandlePrePrepare(ctx context.Context, in *PrePrepareMsg, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
-	err := c.cc.Invoke(ctx, "/common.Pbft/PrePrepare", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/common.Pbft/HandlePrePrepare", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *pbftClient) Prepare(ctx context.Context, in *PrepareMsg, opts ...grpc.CallOption) (*Response, error) {
+func (c *pbftClient) HandlePrepare(ctx context.Context, in *PrepareMsg, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
-	err := c.cc.Invoke(ctx, "/common.Pbft/Prepare", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/common.Pbft/HandlePrepare", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *pbftClient) Commit(ctx context.Context, in *CommitMsg, opts ...grpc.CallOption) (*Response, error) {
+func (c *pbftClient) HandleCommit(ctx context.Context, in *CommitMsg, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
-	err := c.cc.Invoke(ctx, "/common.Pbft/Commit", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/common.Pbft/HandleCommit", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -895,79 +896,79 @@ func (c *pbftClient) Commit(ctx context.Context, in *CommitMsg, opts ...grpc.Cal
 
 // PbftServer is the server API for Pbft service.
 type PbftServer interface {
-	PrePrepare(context.Context, *PrePrepareMsg) (*Response, error)
-	Prepare(context.Context, *PrepareMsg) (*Response, error)
-	Commit(context.Context, *CommitMsg) (*Response, error)
+	HandlePrePrepare(context.Context, *PrePrepareMsg) (*Response, error)
+	HandlePrepare(context.Context, *PrepareMsg) (*Response, error)
+	HandleCommit(context.Context, *CommitMsg) (*Response, error)
 }
 
 // UnimplementedPbftServer can be embedded to have forward compatible implementations.
 type UnimplementedPbftServer struct {
 }
 
-func (*UnimplementedPbftServer) PrePrepare(context.Context, *PrePrepareMsg) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PrePrepare not implemented")
+func (*UnimplementedPbftServer) HandlePrePrepare(context.Context, *PrePrepareMsg) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HandlePrePrepare not implemented")
 }
-func (*UnimplementedPbftServer) Prepare(context.Context, *PrepareMsg) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Prepare not implemented")
+func (*UnimplementedPbftServer) HandlePrepare(context.Context, *PrepareMsg) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HandlePrepare not implemented")
 }
-func (*UnimplementedPbftServer) Commit(context.Context, *CommitMsg) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Commit not implemented")
+func (*UnimplementedPbftServer) HandleCommit(context.Context, *CommitMsg) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HandleCommit not implemented")
 }
 
 func RegisterPbftServer(s *grpc.Server, srv PbftServer) {
 	s.RegisterService(&_Pbft_serviceDesc, srv)
 }
 
-func _Pbft_PrePrepare_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Pbft_HandlePrePrepare_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PrePrepareMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PbftServer).PrePrepare(ctx, in)
+		return srv.(PbftServer).HandlePrePrepare(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/common.Pbft/PrePrepare",
+		FullMethod: "/common.Pbft/HandlePrePrepare",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PbftServer).PrePrepare(ctx, req.(*PrePrepareMsg))
+		return srv.(PbftServer).HandlePrePrepare(ctx, req.(*PrePrepareMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Pbft_Prepare_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Pbft_HandlePrepare_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PrepareMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PbftServer).Prepare(ctx, in)
+		return srv.(PbftServer).HandlePrepare(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/common.Pbft/Prepare",
+		FullMethod: "/common.Pbft/HandlePrepare",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PbftServer).Prepare(ctx, req.(*PrepareMsg))
+		return srv.(PbftServer).HandlePrepare(ctx, req.(*PrepareMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Pbft_Commit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Pbft_HandleCommit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CommitMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PbftServer).Commit(ctx, in)
+		return srv.(PbftServer).HandleCommit(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/common.Pbft/Commit",
+		FullMethod: "/common.Pbft/HandleCommit",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PbftServer).Commit(ctx, req.(*CommitMsg))
+		return srv.(PbftServer).HandleCommit(ctx, req.(*CommitMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -977,16 +978,16 @@ var _Pbft_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*PbftServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "PrePrepare",
-			Handler:    _Pbft_PrePrepare_Handler,
+			MethodName: "HandlePrePrepare",
+			Handler:    _Pbft_HandlePrePrepare_Handler,
 		},
 		{
-			MethodName: "Prepare",
-			Handler:    _Pbft_Prepare_Handler,
+			MethodName: "HandlePrepare",
+			Handler:    _Pbft_HandlePrepare_Handler,
 		},
 		{
-			MethodName: "Commit",
-			Handler:    _Pbft_Commit_Handler,
+			MethodName: "HandleCommit",
+			Handler:    _Pbft_HandleCommit_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

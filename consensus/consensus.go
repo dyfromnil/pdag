@@ -82,5 +82,5 @@ type ConsenterSupport interface {
 	// unlike WriteBlock that also mutates its metadata.
 	Append(block *cb.Block, tips []*cb.Block) error
 
-	GetIdendity() *msp.IdentityProvider
+	GetIdendity() msp.IdentityProvider
 }

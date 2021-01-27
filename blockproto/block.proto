@@ -43,18 +43,18 @@ message BlockData {
 message PrePrepareMsg {
     Block block = 1;
     //digest is the blockheader hash
-    bytes digest = 2;
+    string digest = 2;
     bytes sign =3;
 }
 
 message PrepareMsg {
-    bytes digest = 1;
+    string digest = 1;
     bytes sign =2;
     string nodeID = 3;
 }
 
 message CommitMsg {
-    bytes digest = 1;
+    string digest = 1;
     bytes sign =2;
     string nodeID = 3;
 }
@@ -68,7 +68,7 @@ service SendEnvelops {
 }
 
 service Pbft {
-    rpc PrePrepare(PrePrepareMsg) returns (Response) {}
-    rpc Prepare(PrepareMsg) returns (Response) {}
-    rpc Commit(CommitMsg) returns (Response) {}
+    rpc HandlePrePrepare(PrePrepareMsg) returns (Response) {}
+    rpc HandlePrepare(PrepareMsg) returns (Response) {}
+    rpc HandleCommit(CommitMsg) returns (Response) {}
 }
