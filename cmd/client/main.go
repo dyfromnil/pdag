@@ -74,6 +74,7 @@ func main() {
 			break
 		}
 		if err != nil {
+			log.Fatalf("error is:%s", err)
 			panic("Receive Error")
 		}
 

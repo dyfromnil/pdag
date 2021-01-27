@@ -13,30 +13,16 @@ import (
 	"github.com/dyfromnil/pdag/chain"
 	"github.com/dyfromnil/pdag/chain/blkstorage"
 	"github.com/dyfromnil/pdag/chain/blockledger/fileledger"
+	"github.com/dyfromnil/pdag/consensus"
 	"github.com/dyfromnil/pdag/consensus/solo"
 	cb "github.com/dyfromnil/pdag/proto-go/common"
 )
-
-//SendEnvelopsService for
-type SendEnvelopsService struct {
-	envCh chan cb.Envelope
-}
 
 //Main for server starting
 func Main() {
 	fmt.Println("Server start...")
 
-	server := grpc.NewServer()
-	sendEnvelopsService := &SendEnvelopsService{envCh: make(chan cb.Envelope, 200)}
-	cb.RegisterSendEnvelopsServer(server, sendEnvelopsService)
-
-	lis, err := net.Listen("tcp", globleconfig.NodeTable["n0"])
-	if err != nil {
-		log.Fatalf("net.Listen err: %v", err)
-	}
-
-	go server.Serve(lis)
-
+	//----- config node : ledger and consensus -----
 	conf := blkstorage.NewConf("", 0)
 	blkstore, _ := blkstorage.NewBlockStore(conf)
 	ledger := fileledger.NewFileLedger(blkstore)
@@ -46,18 +32,47 @@ func Main() {
 	soloConsensus := solo.New()
 	soloChain := soloConsensus.HandleChain(chainSupport)
 
+	node := Node{chain: soloChain}
+
+	//--------- node start ---------
+	node.startConsensus()
+	envCh := make(chan cb.Envelope, 200)
+	go node.startReceiveEnvelope(envCh)
+
+	//------------ listen Envelopes from clients to envCh -----------
+	listenEnv := grpc.NewServer()
+	sendEnvelopsService := &SendEnvelopsService{
+		envCh: envCh,
+	}
+	cb.RegisterSendEnvelopsServer(listenEnv, sendEnvelopsService)
+
+	lis, err := net.Listen("tcp", globleconfig.NodeTable["n0"])
+	if err != nil {
+		log.Fatalf("net.Listen err: %v", err)
+	}
+
+	go listenEnv.Serve(lis)
+
+	select {}
+}
+
+//Node for
+type Node struct {
+	chain consensus.Chain
+}
+
+func (n *Node) startConsensus() {
+	n.chain.Start()
+}
+
+func (n *Node) startReceiveEnvelope(envCh chan cb.Envelope) {
+	log.Printf("receive pipe start!")
 	var timer <-chan time.Time
 	timer = time.After(time.Duration(time.Second * 10))
-
-	soloChain.Start()
-
-	fmt.Println("begining receive....")
-	var i int = 0
 	for {
-		i++
 		select {
-		case env := <-sendEnvelopsService.envCh:
-			err := soloChain.Order(&env)
+		case env := <-envCh:
+			err := n.chain.Order(&env)
 			if err != nil {
 				panic("order panic!")
 			}
@@ -65,6 +80,11 @@ func Main() {
 			break
 		}
 	}
+}
+
+//SendEnvelopsService for
+type SendEnvelopsService struct {
+	envCh chan cb.Envelope
 }
 
 //Request for

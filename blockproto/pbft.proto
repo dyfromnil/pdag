@@ -1,8 +1,0 @@
-syntax = "proto3";
-
-package commu;
-option go_package = "proto-go/commu";
-
-// import "blockproto/block.proto";
-
-

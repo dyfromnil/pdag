@@ -34,27 +34,29 @@ message Block {
 message BlockHeader {
     repeated bytes previous_hash = 1; // The hash of the previous block header
     bytes data_hash = 2; // The hash of the BlockData, by MerkleTree
-    bytes digest = 3;
-    int32 sequenceID = 4;
-    bytes sign =5;
 }
 
 message BlockData {
     repeated bytes data = 1;
 }
 
+message PrePrepareMsg {
+    Block block = 1;
+    //digest is the blockheader hash
+    bytes digest = 2;
+    bytes sign =3;
+}
+
 message PrepareMsg {
     bytes digest = 1;
-    int32 sequenceID = 2;
-    bytes sign =3;
-    string nodeID = 4;
+    bytes sign =2;
+    string nodeID = 3;
 }
 
 message CommitMsg {
     bytes digest = 1;
-    int32 sequenceID = 2;
-    bytes sign =3;
-    string nodeID = 4;
+    bytes sign =2;
+    string nodeID = 3;
 }
 
 message Response {
@@ -66,7 +68,7 @@ service SendEnvelops {
 }
 
 service PrePrepare {
-    rpc Request(Block) returns (Response) {}
+    rpc Request(PrePrepareMsg) returns (Response) {}
 }
 
 service PC {

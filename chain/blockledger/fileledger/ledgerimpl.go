@@ -67,9 +67,11 @@ func (fl *FileLedger) CreateNextBlock(messages []*cb.Envelope) (*cb.Block, []*cb
 		}
 	}
 
-	block := blkstorage.NewBlock(previousBlockHash)
-	block.Header.DataHash = blkstorage.BlockDataHash(data)
-	block.Data = data
+	header := &cb.BlockHeader{
+		PreviousHash: previousBlockHash,
+		DataHash:     blkstorage.BlockDataHash(data),
+	}
+	block := blkstorage.NewBlock(header, data)
 
 	return block, tipsList
 }

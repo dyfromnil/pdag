@@ -137,7 +137,7 @@ func (ch *chain) main() {
 		}
 	}()
 
-	go createWorkerPool(3, batchCh, ch)
+	go createWorkerPool(1, batchCh, ch)
 }
 
 func worker(wg *sync.WaitGroup, batchCh chan []*cb.Envelope, ch *chain) {

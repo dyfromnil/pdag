@@ -3,36 +3,24 @@ package blkstorage
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/asn1"
+
+	"github.com/golang/protobuf/proto"
+
 	cb "github.com/dyfromnil/pdag/proto-go/common"
 )
 
 // NewBlock constructs a block with no data and no metadata.
-func NewBlock(previousHash [][]byte) *cb.Block {
-	block := &cb.Block{}
-	block.Header = &cb.BlockHeader{}
-	block.Header.PreviousHash = previousHash
-	block.Header.DataHash = []byte{}
-	block.Data = &cb.BlockData{}
-	return block
-}
-
-type asn1Header struct {
-	PreviousHash [][]byte
-	DataHash     []byte
+func NewBlock(header *cb.BlockHeader, data *cb.BlockData) *cb.Block {
+	return &cb.Block{
+		Header: header,
+		Data:   data,
+	}
 }
 
 //BlockHeaderBytes for
 func BlockHeaderBytes(b *cb.BlockHeader) []byte {
-	asn1Header := asn1Header{
-		PreviousHash: b.PreviousHash,
-		DataHash:     b.DataHash,
-	}
-	result, err := asn1.Marshal(asn1Header)
+	result, err := proto.Marshal(b)
 	if err != nil {
-		// Errors should only arise for types which cannot be encoded, since the
-		// BlockHeader type is known a-priori to contain only encodable types, an
-		// error here is fatal and should not be propagated
 		panic(err)
 	}
 	return result
