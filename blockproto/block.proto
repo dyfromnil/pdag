@@ -1,25 +1,28 @@
-// Copyright the Hyperledger Fabric contributors. All rights reserved.
-//
-// SPDX-License-Identifier: Apache-2.0
-
 syntax = "proto3";
 
 package common;
 option go_package = "proto-go/common";
 
 // Envelope wraps a Payload with a signature so that the message may be authenticated
+// <REQUEST,o,t,c>
+// Request
 message Envelope {
     // A marshaled Payload
     bytes payload = 1;
 
     // A signature by the creator specified in the Payload header
     bytes signature = 2;
+
+    int64 timestamp = 3;
+    string clientAddr=4;
 }
 
 // This is finalized block structure to be shared among the orderer and peer
 // Note that the BlockHeader chains to the previous BlockHeader, and the BlockData hash is embedded
 // in the BlockHeader.  This makes it natural and obvious that the Data is included in the hash, but
 // the Metadata is not.
+//<<PRE-PREPARE,v,n,d>,m>
+//PrePrepare
 message Block {
     BlockHeader header = 1;
     BlockData data = 2;
@@ -31,8 +34,42 @@ message Block {
 message BlockHeader {
     repeated bytes previous_hash = 1; // The hash of the previous block header
     bytes data_hash = 2; // The hash of the BlockData, by MerkleTree
+    bytes digest = 3;
+    int32 sequenceID = 4;
+    bytes sign =5;
 }
 
 message BlockData {
     repeated bytes data = 1;
+}
+
+message PrepareMsg {
+    bytes digest = 1;
+    int32 sequenceID = 2;
+    bytes sign =3;
+    string nodeID = 4;
+}
+
+message CommitMsg {
+    bytes digest = 1;
+    int32 sequenceID = 2;
+    bytes sign =3;
+    string nodeID = 4;
+}
+
+message Response {
+    bool resCode =1;
+}
+
+service SendEnvelops {
+    rpc Request(stream Envelope) returns (stream Response) {}
+}
+
+service PrePrepare {
+    rpc Request(Block) returns (Response) {}
+}
+
+service PC {
+    rpc Prepare(PrepareMsg) returns (Response) {}
+    rpc Commit(CommitMsg) returns (Response) {}
 }

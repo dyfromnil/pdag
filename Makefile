@@ -1,5 +1,5 @@
 dag:
-	rm -rf proto-go/common
+	rm -rf proto-go/*
 	protoc --go_out=plugins=grpc:. ./blockproto/block.proto
 
 run:
