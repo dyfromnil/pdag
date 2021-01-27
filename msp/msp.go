@@ -23,7 +23,11 @@ type IdentityProvider interface {
 	GetKeyPair() (prvkey, pubkey []byte)
 	RsaSignWithSha256(data []byte, keyBytes []byte) []byte
 	RsaVerySignWithSha256(data, signData, keyBytes []byte) bool
+	GetPubKey(nodeID string) []byte
+	GetPivKey(nodeID string) []byte
 	GetClusterAddrs() map[string]string
+	GetNodeID() string
+	GetAddr() string
 }
 
 // Identity for
@@ -33,6 +37,17 @@ type Identity struct {
 	rsaPrivKey []byte
 	rsaPubKey  []byte
 	cluster    map[string]string
+}
+
+// NewIdt for
+func NewIdt(nodeid string) Identity {
+	return Identity{
+		nodeID:     nodeid,
+		addr:       globleconfig.NodeTable[nodeid],
+		rsaPrivKey: getPivKey(nodeid),
+		rsaPubKey:  getPubKey(nodeid),
+		cluster:    globleconfig.NodeTable,
+	}
 }
 
 // GenRsaKeys for
@@ -160,6 +175,10 @@ func (iden *Identity) RsaVerySignWithSha256(data, signData, keyBytes []byte) boo
 
 // GetPubKey for
 func (iden *Identity) GetPubKey(nodeID string) []byte {
+	return getPubKey(nodeID)
+}
+
+func getPubKey(nodeID string) []byte {
 	key, err := ioutil.ReadFile("Keys/" + nodeID + "/" + nodeID + "_RSA_PUB")
 	if err != nil {
 		log.Panic(err)
@@ -169,9 +188,28 @@ func (iden *Identity) GetPubKey(nodeID string) []byte {
 
 // GetPivKey for
 func (iden *Identity) GetPivKey(nodeID string) []byte {
+	return getPivKey(nodeID)
+}
+
+func getPivKey(nodeID string) []byte {
 	key, err := ioutil.ReadFile("Keys/" + nodeID + "/" + nodeID + "_RSA_PIV")
 	if err != nil {
 		log.Panic(err)
 	}
 	return key
+}
+
+// GetClusterAddrs for
+func (iden *Identity) GetClusterAddrs() map[string]string {
+	return iden.cluster
+}
+
+//GetNodeID for
+func (iden *Identity) GetNodeID() string {
+	return iden.nodeID
+}
+
+//GetAddr for
+func (iden *Identity) GetAddr() string {
+	return iden.addr
 }

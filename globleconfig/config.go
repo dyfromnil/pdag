@@ -17,6 +17,9 @@ const (
 
 	//ClientAddr for
 	ClientAddr = "127.0.0.1:8688"
+
+	//LeaderListenEnvelopeAddr for
+	LeaderListenEnvelopeAddr = "127.0.0.1:8689"
 )
 
 //NodeTable for

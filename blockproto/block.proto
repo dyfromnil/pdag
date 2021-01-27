@@ -67,11 +67,8 @@ service SendEnvelops {
     rpc Request(stream Envelope) returns (stream Response) {}
 }
 
-service PrePrepare {
-    rpc Request(PrePrepareMsg) returns (Response) {}
-}
-
-service PC {
+service pbft {
+    rpc PrePrepare(PrePrepareMsg) returns (Response) {}
     rpc Prepare(PrepareMsg) returns (Response) {}
     rpc Commit(CommitMsg) returns (Response) {}
 }

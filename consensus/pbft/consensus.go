@@ -18,9 +18,10 @@ import (
 type consenter struct{}
 
 type chain struct {
-	support  consensus.ConsenterSupport
-	sendChan chan *message
-	exitChan chan struct{}
+	support   consensus.ConsenterSupport
+	sendChan  chan *message
+	exitChan  chan struct{}
+	batchChan chan []*cb.Envelope
 }
 
 type message struct {
@@ -78,38 +79,16 @@ func (ch *chain) Errored() <-chan struct{} {
 	return ch.exitChan
 }
 
-func (ch *chain) main() {
-	batchCh := make(chan []*cb.Envelope, 200)
+func (ch *chain) Preprepare() {
+	for {
+		msg := <-ch.sendChan
+		batches, _ := ch.support.BlockCutter().Ordered(msg.normalMsg)
 
-	//make batch and send it to batch chan
-	go func() {
-		for {
-			msg := <-ch.sendChan
-			batches, _ := ch.support.BlockCutter().Ordered(msg.normalMsg)
-
-			for _, batch := range batches {
-				batchCh <- batch
-			}
+		for _, batch := range batches {
+			block, tipsList := ch.support.CreateNextBlock(batch)
+			fmt.Println("num of tips:", len(tipsList))
+			ch.batchChan <- batch
+			ch.support.Append(block, tipsList)
 		}
-	}()
-
-	go createWorkerPool(1, batchCh, ch)
-}
-
-func worker(wg *sync.WaitGroup, batchCh chan []*cb.Envelope, ch *chain) {
-	defer wg.Done()
-	for batch := range batchCh {
-		block, tipsList := ch.support.CreateNextBlock(batch)
-		fmt.Println("num of tips:", len(tipsList))
-		time.Sleep(time.Millisecond * time.Duration(500))
-		ch.support.Append(block, tipsList)
 	}
-}
-func createWorkerPool(numOfWorkers int, batchCh chan []*cb.Envelope, ch *chain) {
-	var wg sync.WaitGroup
-	for i := 0; i < numOfWorkers; i++ {
-		wg.Add(1)
-		go worker(&wg, batchCh, ch)
-	}
-	wg.Wait()
 }

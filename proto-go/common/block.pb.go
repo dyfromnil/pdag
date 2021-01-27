@@ -557,19 +557,19 @@ var file_blockproto_block_proto_rawDesc = []byte{
 	0x07, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f,
 	0x6e, 0x2e, 0x45, 0x6e, 0x76, 0x65, 0x6c, 0x6f, 0x70, 0x65, 0x1a, 0x10, 0x2e, 0x63, 0x6f, 0x6d,
 	0x6d, 0x6f, 0x6e, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x28, 0x01,
-	0x30, 0x01, 0x32, 0x42, 0x0a, 0x0a, 0x50, 0x72, 0x65, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65,
-	0x12, 0x34, 0x0a, 0x07, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x15, 0x2e, 0x63, 0x6f,
-	0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x50, 0x72, 0x65, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65, 0x4d,
-	0x73, 0x67, 0x1a, 0x10, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x32, 0x68, 0x0a, 0x02, 0x50, 0x43, 0x12, 0x31, 0x0a, 0x07,
-	0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65, 0x12, 0x12, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e,
-	0x2e, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65, 0x4d, 0x73, 0x67, 0x1a, 0x10, 0x2e, 0x63, 0x6f,
-	0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
-	0x2f, 0x0a, 0x06, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x12, 0x11, 0x2e, 0x63, 0x6f, 0x6d, 0x6d,
-	0x6f, 0x6e, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x4d, 0x73, 0x67, 0x1a, 0x10, 0x2e, 0x63,
-	0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
-	0x42, 0x11, 0x5a, 0x0f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2d, 0x67, 0x6f, 0x2f, 0x63, 0x6f, 0x6d,
-	0x6d, 0x6f, 0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x30, 0x01, 0x32, 0xa3, 0x01, 0x0a, 0x04, 0x70, 0x62, 0x66, 0x74, 0x12, 0x37, 0x0a, 0x0a, 0x50,
+	0x72, 0x65, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65, 0x12, 0x15, 0x2e, 0x63, 0x6f, 0x6d, 0x6d,
+	0x6f, 0x6e, 0x2e, 0x50, 0x72, 0x65, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65, 0x4d, 0x73, 0x67,
+	0x1a, 0x10, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0x00, 0x12, 0x31, 0x0a, 0x07, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65, 0x12,
+	0x12, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65,
+	0x4d, 0x73, 0x67, 0x1a, 0x10, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x2f, 0x0a, 0x06, 0x43, 0x6f, 0x6d, 0x6d, 0x69,
+	0x74, 0x12, 0x11, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69,
+	0x74, 0x4d, 0x73, 0x67, 0x1a, 0x10, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x11, 0x5a, 0x0f, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x2d, 0x67, 0x6f, 0x2f, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
@@ -600,13 +600,13 @@ var file_blockproto_block_proto_depIdxs = []int32{
 	3, // 1: common.Block.data:type_name -> common.BlockData
 	1, // 2: common.PrePrepareMsg.block:type_name -> common.Block
 	0, // 3: common.SendEnvelops.Request:input_type -> common.Envelope
-	4, // 4: common.PrePrepare.Request:input_type -> common.PrePrepareMsg
-	5, // 5: common.PC.Prepare:input_type -> common.PrepareMsg
-	6, // 6: common.PC.Commit:input_type -> common.CommitMsg
+	4, // 4: common.pbft.PrePrepare:input_type -> common.PrePrepareMsg
+	5, // 5: common.pbft.Prepare:input_type -> common.PrepareMsg
+	6, // 6: common.pbft.Commit:input_type -> common.CommitMsg
 	7, // 7: common.SendEnvelops.Request:output_type -> common.Response
-	7, // 8: common.PrePrepare.Request:output_type -> common.Response
-	7, // 9: common.PC.Prepare:output_type -> common.Response
-	7, // 10: common.PC.Commit:output_type -> common.Response
+	7, // 8: common.pbft.PrePrepare:output_type -> common.Response
+	7, // 9: common.pbft.Prepare:output_type -> common.Response
+	7, // 10: common.pbft.Commit:output_type -> common.Response
 	7, // [7:11] is the sub-list for method output_type
 	3, // [3:7] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
@@ -725,7 +725,7 @@ func file_blockproto_block_proto_init() {
 			NumEnums:      0,
 			NumMessages:   8,
 			NumExtensions: 0,
-			NumServices:   3,
+			NumServices:   2,
 		},
 		GoTypes:           file_blockproto_block_proto_goTypes,
 		DependencyIndexes: file_blockproto_block_proto_depIdxs,
@@ -849,180 +849,144 @@ var _SendEnvelops_serviceDesc = grpc.ServiceDesc{
 	Metadata: "blockproto/block.proto",
 }
 
-// PrePrepareClient is the client API for PrePrepare service.
+// PbftClient is the client API for Pbft service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type PrePrepareClient interface {
-	Request(ctx context.Context, in *PrePrepareMsg, opts ...grpc.CallOption) (*Response, error)
+type PbftClient interface {
+	PrePrepare(ctx context.Context, in *PrePrepareMsg, opts ...grpc.CallOption) (*Response, error)
+	Prepare(ctx context.Context, in *PrepareMsg, opts ...grpc.CallOption) (*Response, error)
+	Commit(ctx context.Context, in *CommitMsg, opts ...grpc.CallOption) (*Response, error)
 }
 
-type prePrepareClient struct {
+type pbftClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewPrePrepareClient(cc grpc.ClientConnInterface) PrePrepareClient {
-	return &prePrepareClient{cc}
+func NewPbftClient(cc grpc.ClientConnInterface) PbftClient {
+	return &pbftClient{cc}
 }
 
-func (c *prePrepareClient) Request(ctx context.Context, in *PrePrepareMsg, opts ...grpc.CallOption) (*Response, error) {
+func (c *pbftClient) PrePrepare(ctx context.Context, in *PrePrepareMsg, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
-	err := c.cc.Invoke(ctx, "/common.PrePrepare/Request", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/common.pbft/PrePrepare", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// PrePrepareServer is the server API for PrePrepare service.
-type PrePrepareServer interface {
-	Request(context.Context, *PrePrepareMsg) (*Response, error)
+func (c *pbftClient) Prepare(ctx context.Context, in *PrepareMsg, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/common.pbft/Prepare", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
-// UnimplementedPrePrepareServer can be embedded to have forward compatible implementations.
-type UnimplementedPrePrepareServer struct {
+func (c *pbftClient) Commit(ctx context.Context, in *CommitMsg, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/common.pbft/Commit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
-func (*UnimplementedPrePrepareServer) Request(context.Context, *PrePrepareMsg) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Request not implemented")
+// PbftServer is the server API for Pbft service.
+type PbftServer interface {
+	PrePrepare(context.Context, *PrePrepareMsg) (*Response, error)
+	Prepare(context.Context, *PrepareMsg) (*Response, error)
+	Commit(context.Context, *CommitMsg) (*Response, error)
 }
 
-func RegisterPrePrepareServer(s *grpc.Server, srv PrePrepareServer) {
-	s.RegisterService(&_PrePrepare_serviceDesc, srv)
+// UnimplementedPbftServer can be embedded to have forward compatible implementations.
+type UnimplementedPbftServer struct {
 }
 
-func _PrePrepare_Request_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func (*UnimplementedPbftServer) PrePrepare(context.Context, *PrePrepareMsg) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PrePrepare not implemented")
+}
+func (*UnimplementedPbftServer) Prepare(context.Context, *PrepareMsg) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Prepare not implemented")
+}
+func (*UnimplementedPbftServer) Commit(context.Context, *CommitMsg) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Commit not implemented")
+}
+
+func RegisterPbftServer(s *grpc.Server, srv PbftServer) {
+	s.RegisterService(&_Pbft_serviceDesc, srv)
+}
+
+func _Pbft_PrePrepare_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PrePrepareMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PrePrepareServer).Request(ctx, in)
+		return srv.(PbftServer).PrePrepare(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/common.PrePrepare/Request",
+		FullMethod: "/common.pbft/PrePrepare",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PrePrepareServer).Request(ctx, req.(*PrePrepareMsg))
+		return srv.(PbftServer).PrePrepare(ctx, req.(*PrePrepareMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _PrePrepare_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "common.PrePrepare",
-	HandlerType: (*PrePrepareServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "Request",
-			Handler:    _PrePrepare_Request_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "blockproto/block.proto",
-}
-
-// PCClient is the client API for PC service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type PCClient interface {
-	Prepare(ctx context.Context, in *PrepareMsg, opts ...grpc.CallOption) (*Response, error)
-	Commit(ctx context.Context, in *CommitMsg, opts ...grpc.CallOption) (*Response, error)
-}
-
-type pCClient struct {
-	cc grpc.ClientConnInterface
-}
-
-func NewPCClient(cc grpc.ClientConnInterface) PCClient {
-	return &pCClient{cc}
-}
-
-func (c *pCClient) Prepare(ctx context.Context, in *PrepareMsg, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
-	err := c.cc.Invoke(ctx, "/common.PC/Prepare", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *pCClient) Commit(ctx context.Context, in *CommitMsg, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
-	err := c.cc.Invoke(ctx, "/common.PC/Commit", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// PCServer is the server API for PC service.
-type PCServer interface {
-	Prepare(context.Context, *PrepareMsg) (*Response, error)
-	Commit(context.Context, *CommitMsg) (*Response, error)
-}
-
-// UnimplementedPCServer can be embedded to have forward compatible implementations.
-type UnimplementedPCServer struct {
-}
-
-func (*UnimplementedPCServer) Prepare(context.Context, *PrepareMsg) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Prepare not implemented")
-}
-func (*UnimplementedPCServer) Commit(context.Context, *CommitMsg) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Commit not implemented")
-}
-
-func RegisterPCServer(s *grpc.Server, srv PCServer) {
-	s.RegisterService(&_PC_serviceDesc, srv)
-}
-
-func _PC_Prepare_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Pbft_Prepare_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PrepareMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PCServer).Prepare(ctx, in)
+		return srv.(PbftServer).Prepare(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/common.PC/Prepare",
+		FullMethod: "/common.pbft/Prepare",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PCServer).Prepare(ctx, req.(*PrepareMsg))
+		return srv.(PbftServer).Prepare(ctx, req.(*PrepareMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PC_Commit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Pbft_Commit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CommitMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PCServer).Commit(ctx, in)
+		return srv.(PbftServer).Commit(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/common.PC/Commit",
+		FullMethod: "/common.pbft/Commit",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PCServer).Commit(ctx, req.(*CommitMsg))
+		return srv.(PbftServer).Commit(ctx, req.(*CommitMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _PC_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "common.PC",
-	HandlerType: (*PCServer)(nil),
+var _Pbft_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "common.pbft",
+	HandlerType: (*PbftServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "PrePrepare",
+			Handler:    _Pbft_PrePrepare_Handler,
+		},
+		{
 			MethodName: "Prepare",
-			Handler:    _PC_Prepare_Handler,
+			Handler:    _Pbft_Prepare_Handler,
 		},
 		{
 			MethodName: "Commit",
-			Handler:    _PC_Commit_Handler,
+			Handler:    _Pbft_Commit_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

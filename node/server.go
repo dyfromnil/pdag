@@ -23,15 +23,15 @@ import (
 func Main() {
 	log.Printf("Server starting...")
 
-	msp.GenRsaKeys()
+	var idt msp.Identity
+	idt.GenRsaKeys()
+
 	if len(os.Args) != 2 {
 		log.Panic("Input error")
 	}
 	nodeID := os.Args[1]
-	var identity msp.Identity
-	if addr, ok := globleconfig.NodeTable[nodeID]; ok {
-		p := NewPBFT(nodeID, addr)
-		go p.tcpListen() //启动节点
+	if _, ok := globleconfig.NodeTable[nodeID]; ok {
+		idt = msp.NewIdt(nodeID)
 	} else {
 		log.Fatal("无此节点编号！")
 	}
@@ -41,7 +41,7 @@ func Main() {
 	blkstore, _ := blkstorage.NewBlockStore(conf)
 	ledger := fileledger.NewFileLedger(blkstore)
 
-	chainSupport := chain.NewSupport(ledger)
+	chainSupport := chain.NewSupport(ledger, &idt)
 
 	soloConsensus := solo.New()
 	soloChain := soloConsensus.HandleChain(chainSupport)
@@ -60,7 +60,7 @@ func Main() {
 	}
 	cb.RegisterSendEnvelopsServer(listenEnv, sendEnvelopsService)
 
-	lis, err := net.Listen("tcp", globleconfig.NodeTable["N0"])
+	lis, err := net.Listen("tcp", globleconfig.LeaderListenEnvelopeAddr)
 	if err != nil {
 		log.Fatalf("net.Listen err: %v", err)
 	}

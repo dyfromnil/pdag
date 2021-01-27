@@ -51,7 +51,7 @@ func main() {
 	clt := NewClient(3)
 	go clt.SendEnv(envCh)
 
-	conn, err := grpc.Dial(globleconfig.NodeTable["n0"], grpc.WithInsecure())
+	conn, err := grpc.Dial(globleconfig.LeaderListenEnvelopeAddr, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("grpc.Dial err: %v", err)
 	}
