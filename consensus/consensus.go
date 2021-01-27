@@ -8,6 +8,7 @@ package consensus
 
 import (
 	"github.com/dyfromnil/pdag/chain/blockcutter"
+	"github.com/dyfromnil/pdag/msp"
 	cb "github.com/dyfromnil/pdag/proto-go/common"
 )
 
@@ -80,4 +81,6 @@ type ConsenterSupport interface {
 	// Append appends a new block to the ledger in its raw form,
 	// unlike WriteBlock that also mutates its metadata.
 	Append(block *cb.Block, tips []*cb.Block) error
+
+	GetIdendity() *msp.IdentityProvider
 }

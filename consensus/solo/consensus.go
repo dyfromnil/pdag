@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/dyfromnil/pdag/consensus"
-	// cfg "github.com/dyfromnil/pdag/globleconfig"
 	cb "github.com/dyfromnil/pdag/proto-go/common"
 	"math/rand"
 )

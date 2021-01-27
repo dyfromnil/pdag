@@ -1,11 +1,10 @@
 package node
 
 import (
-	"fmt"
-	"github.com/dyfromnil/pdag/globleconfig"
 	"io"
 	"log"
 	"net"
+	"os"
 	"time"
 
 	"google.golang.org/grpc"
@@ -15,12 +14,27 @@ import (
 	"github.com/dyfromnil/pdag/chain/blockledger/fileledger"
 	"github.com/dyfromnil/pdag/consensus"
 	"github.com/dyfromnil/pdag/consensus/solo"
+	"github.com/dyfromnil/pdag/globleconfig"
+	"github.com/dyfromnil/pdag/msp"
 	cb "github.com/dyfromnil/pdag/proto-go/common"
 )
 
 //Main for server starting
 func Main() {
-	fmt.Println("Server start...")
+	log.Printf("Server starting...")
+
+	msp.GenRsaKeys()
+	if len(os.Args) != 2 {
+		log.Panic("Input error")
+	}
+	nodeID := os.Args[1]
+	var identity msp.Identity
+	if addr, ok := globleconfig.NodeTable[nodeID]; ok {
+		p := NewPBFT(nodeID, addr)
+		go p.tcpListen() //启动节点
+	} else {
+		log.Fatal("无此节点编号！")
+	}
 
 	//----- config node : ledger and consensus -----
 	conf := blkstorage.NewConf("", 0)
@@ -46,7 +60,7 @@ func Main() {
 	}
 	cb.RegisterSendEnvelopsServer(listenEnv, sendEnvelopsService)
 
-	lis, err := net.Listen("tcp", globleconfig.NodeTable["n0"])
+	lis, err := net.Listen("tcp", globleconfig.NodeTable["N0"])
 	if err != nil {
 		log.Fatalf("net.Listen err: %v", err)
 	}
