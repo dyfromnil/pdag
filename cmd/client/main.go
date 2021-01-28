@@ -88,11 +88,13 @@ func main() {
 	sendClient := cb.NewSendEnvelopsClient(conn)
 	stream, err := sendClient.Request(context.Background())
 	if err != nil {
+		log.Fatalf("grpc.Dial err: %v", err)
 		panic("Request Error")
 	}
 	for {
 		env := <-envCh
 		err = stream.Send(&env)
+		time.Sleep(time.Millisecond * 125)
 		if err != nil {
 			panic("Send Error")
 		}

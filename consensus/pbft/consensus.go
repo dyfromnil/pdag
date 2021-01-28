@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 	"sync"
-	"time"
 
 	"github.com/dyfromnil/pdag/globleconfig"
 
@@ -49,36 +48,14 @@ type message struct {
 }
 
 //NewPbftServer for
-func NewPbftServer(support consensus.ConsenterSupport, envCh chan cb.Envelope) consensus.Consenter {
+func NewPbftServer(support consensus.ConsenterSupport) consensus.Consenter {
 	return &PbftServer{
-		ch:    newChain(support),
-		envCh: envCh,
+		ch: newChain(support),
 	}
 }
 
 func (pb *PbftServer) HandleChain(support consensus.ConsenterSupport) consensus.Chain {
 	return pb.ch
-}
-
-func (pb *PbftServer) startReceiveEnvelope() {
-	log.Printf("receive pipe start!")
-	var timer <-chan time.Time
-	timer = time.After(time.Duration(time.Second * 10))
-	for {
-		select {
-		case env := <-pb.envCh:
-			err := pb.ch.Order(&env)
-			if err != nil {
-				panic("order panic!")
-			}
-		case <-timer:
-			break
-		}
-	}
-}
-
-func (pb *PbftServer) St() {
-	log.Printf("lksjf")
 }
 
 // Start
@@ -90,9 +67,11 @@ func (pb *PbftServer) Start() {
 	if err != nil {
 		log.Fatalf("net.Listen err: %v", err)
 	}
-	server.Serve(lis)
+	go server.Serve(lis)
 	pb.ch.Start()
-	go pb.startReceiveEnvelope()
+	if pb.ch.support.GetIdendity().GetNodeID() == "N0" {
+		go pb.ch.prePrepare()
+	}
 }
 
 func newChain(support consensus.ConsenterSupport) *chain {
@@ -187,11 +166,12 @@ func (ch *chain) prePrepare() {
 }
 
 func (ch *chain) broadcastPrePrepare(pp *cb.PrePrepareMsg) {
-	for i := range ch.support.GetIdendity().GetClusterAddrs() {
+	for _, i := range ch.support.GetIdendity().GetClusterAddrs() {
 		if i == ch.support.GetIdendity().GetAddr() {
 			continue
 		}
 		go func(i string) {
+			log.Printf("---------%s----------", i)
 			conn, err := grpc.Dial(i, grpc.WithInsecure())
 			if err != nil {
 				log.Fatalf("grpc.Dial err: %v", err)
@@ -209,7 +189,7 @@ func (ch *chain) broadcastPrePrepare(pp *cb.PrePrepareMsg) {
 }
 
 func (ch *chain) broadcastPrepare(p *cb.PrepareMsg) {
-	for i := range ch.support.GetIdendity().GetClusterAddrs() {
+	for _, i := range ch.support.GetIdendity().GetClusterAddrs() {
 		if i == ch.support.GetIdendity().GetAddr() {
 			continue
 		}
@@ -231,7 +211,7 @@ func (ch *chain) broadcastPrepare(p *cb.PrepareMsg) {
 }
 
 func (ch *chain) broadcastCommit(c *cb.CommitMsg) {
-	for i := range ch.support.GetIdendity().GetClusterAddrs() {
+	for _, i := range ch.support.GetIdendity().GetClusterAddrs() {
 		if i == ch.support.GetIdendity().GetAddr() {
 			continue
 		}
@@ -268,6 +248,7 @@ func (ch *chain) setCommitConfirmMap(val, val2 string, b bool) {
 	ch.commitConfirmCount[val][val2] = b
 }
 
+//HandlePrePrepare for
 func (pb *PbftServer) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*cb.Response, error) {
 	log.Printf("本节点已接收到主节点发来的PrePrepare ...")
 

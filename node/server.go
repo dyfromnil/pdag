@@ -11,6 +11,7 @@ import (
 	"github.com/dyfromnil/pdag/chain"
 	"github.com/dyfromnil/pdag/chain/blkstorage"
 	"github.com/dyfromnil/pdag/chain/blockledger/fileledger"
+	"github.com/dyfromnil/pdag/consensus"
 	"github.com/dyfromnil/pdag/consensus/pbft"
 	"github.com/dyfromnil/pdag/globleconfig"
 	"github.com/dyfromnil/pdag/msp"
@@ -43,30 +44,32 @@ func Main() {
 	chainSupport := chain.NewSupport(ledger, &idt)
 
 	//--------- consensus start ---------
-	envCh := make(chan cb.Envelope, 200)
-	pbftServer := pbft.NewPbftServer(chainSupport, envCh)
+	pbftServer := pbft.NewPbftServer(chainSupport)
 	pbftServer.Start()
 
-	//------------ listen Envelopes from clients to envCh -----------
-	listenEnv := grpc.NewServer()
-	sendEnvelopsService := &SendEnvelopsService{
-		envCh: envCh,
-	}
-	cb.RegisterSendEnvelopsServer(listenEnv, sendEnvelopsService)
+	//------------ Leader Node listen Envelopes from clients to envCh -----------
+	if nodeID == "N0" {
+		listenEnv := grpc.NewServer()
+		sendEnvelopsService := &SendEnvelopsService{
+			ch: pbftServer.HandleChain(chainSupport),
+		}
+		cb.RegisterSendEnvelopsServer(listenEnv, sendEnvelopsService)
 
-	lis, err := net.Listen("tcp", globleconfig.LeaderListenEnvelopeAddr)
-	if err != nil {
-		log.Fatalf("net.Listen err: %v", err)
-	}
+		lis, err := net.Listen("tcp", globleconfig.LeaderListenEnvelopeAddr)
+		if err != nil {
+			log.Fatalf("net.Listen err: %v", err)
+		}
 
-	go listenEnv.Serve(lis)
+		go listenEnv.Serve(lis)
+		log.Printf("receive pipe started!")
+	}
 
 	select {}
 }
 
 //SendEnvelopsService for
 type SendEnvelopsService struct {
-	envCh chan cb.Envelope
+	ch consensus.Chain
 }
 
 //Request for
@@ -82,7 +85,7 @@ func (s *SendEnvelopsService) Request(stream cb.SendEnvelops_RequestServer) erro
 
 		log.Printf("Receive Envelope from %s,sendtime:%d", r.GetClientAddr(), r.GetTimestamp())
 
-		s.envCh <- *r
+		s.ch.Order(r)
 
 		err = stream.Send(&cb.Response{ResCode: true})
 		if err != nil {
