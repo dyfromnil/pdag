@@ -21,6 +21,7 @@ type Consenter interface {
 	// the last block committed to the ledger of this Chain. For a new chain, or one which is migrated,
 	// this metadata will be nil (or contain a zero-length Value), as there is no prior metadata to report.
 	HandleChain(support ConsenterSupport) Chain
+	Start()
 }
 
 // Chain defines a way to inject messages for ordering.

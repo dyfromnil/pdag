@@ -5,9 +5,10 @@ import (
 	"sync"
 	"time"
 
+	"math/rand"
+
 	"github.com/dyfromnil/pdag/consensus"
 	cb "github.com/dyfromnil/pdag/proto-go/common"
-	"math/rand"
 )
 
 type consenter struct{}
@@ -32,6 +33,9 @@ func New() consensus.Consenter {
 
 func (solo *consenter) HandleChain(support consensus.ConsenterSupport) consensus.Chain {
 	return newChain(support)
+}
+
+func (solo *consenter) Start() {
 }
 
 func newChain(support consensus.ConsenterSupport) *chain {

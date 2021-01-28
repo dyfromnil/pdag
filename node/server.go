@@ -5,15 +5,13 @@ import (
 	"log"
 	"net"
 	"os"
-	"time"
 
 	"google.golang.org/grpc"
 
 	"github.com/dyfromnil/pdag/chain"
 	"github.com/dyfromnil/pdag/chain/blkstorage"
 	"github.com/dyfromnil/pdag/chain/blockledger/fileledger"
-	"github.com/dyfromnil/pdag/consensus"
-	"github.com/dyfromnil/pdag/consensus/solo"
+	"github.com/dyfromnil/pdag/consensus/pbft"
 	"github.com/dyfromnil/pdag/globleconfig"
 	"github.com/dyfromnil/pdag/msp"
 	cb "github.com/dyfromnil/pdag/proto-go/common"
@@ -23,6 +21,7 @@ import (
 func Main() {
 	log.Printf("Server starting...")
 
+	// ----------check identity------------
 	var idt msp.Identity
 	idt.GenRsaKeys()
 
@@ -43,15 +42,10 @@ func Main() {
 
 	chainSupport := chain.NewSupport(ledger, &idt)
 
-	soloConsensus := solo.New()
-	soloChain := soloConsensus.HandleChain(chainSupport)
-
-	node := Node{chain: soloChain}
-
-	//--------- node start ---------
-	node.startConsensus()
+	//--------- consensus start ---------
 	envCh := make(chan cb.Envelope, 200)
-	go node.startReceiveEnvelope(envCh)
+	pbftServer := pbft.NewPbftServer(chainSupport, envCh)
+	pbftServer.Start()
 
 	//------------ listen Envelopes from clients to envCh -----------
 	listenEnv := grpc.NewServer()
@@ -68,32 +62,6 @@ func Main() {
 	go listenEnv.Serve(lis)
 
 	select {}
-}
-
-//Node for
-type Node struct {
-	chain consensus.Chain
-}
-
-func (n *Node) startConsensus() {
-	n.chain.Start()
-}
-
-func (n *Node) startReceiveEnvelope(envCh chan cb.Envelope) {
-	log.Printf("receive pipe start!")
-	var timer <-chan time.Time
-	timer = time.After(time.Duration(time.Second * 10))
-	for {
-		select {
-		case env := <-envCh:
-			err := n.chain.Order(&env)
-			if err != nil {
-				panic("order panic!")
-			}
-		case <-timer:
-			break
-		}
-	}
 }
 
 //SendEnvelopsService for

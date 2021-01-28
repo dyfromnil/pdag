@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
-	"github.com/dyfromnil/pdag/globleconfig"
 	"log"
 	"net"
 	"sync"
+	"time"
+
+	"github.com/dyfromnil/pdag/globleconfig"
 
 	"github.com/dyfromnil/pdag/chain/blkstorage"
 	"github.com/dyfromnil/pdag/consensus"
@@ -16,8 +18,10 @@ import (
 	"google.golang.org/grpc"
 )
 
-type pbftServer struct {
-	ch *chain
+// PbftServer for
+type PbftServer struct {
+	ch    *chain
+	envCh chan cb.Envelope
 }
 
 type chain struct {
@@ -44,23 +48,59 @@ type message struct {
 	normalMsg *cb.Envelope
 }
 
-//NewpbftServer for
-func NewpbftServer(support consensus.ConsenterSupport) consensus.Consenter {
-	return &pbftServer{
-		newChain(support),
+//NewPbftServer for
+func NewPbftServer(support consensus.ConsenterSupport, envCh chan cb.Envelope) consensus.Consenter {
+	return &PbftServer{
+		ch:    newChain(support),
+		envCh: envCh,
 	}
 }
 
-func (pb *pbftServer) HandleChain(support consensus.ConsenterSupport) consensus.Chain {
-	return newChain(support)
+func (pb *PbftServer) HandleChain(support consensus.ConsenterSupport) consensus.Chain {
+	return pb.ch
+}
+
+func (pb *PbftServer) startReceiveEnvelope() {
+	log.Printf("receive pipe start!")
+	var timer <-chan time.Time
+	timer = time.After(time.Duration(time.Second * 10))
+	for {
+		select {
+		case env := <-pb.envCh:
+			err := pb.ch.Order(&env)
+			if err != nil {
+				panic("order panic!")
+			}
+		case <-timer:
+			break
+		}
+	}
+}
+
+func (pb *PbftServer) St() {
+	log.Printf("lksjf")
+}
+
+// Start
+func (pb *PbftServer) Start() {
+	server := grpc.NewServer()
+	cb.RegisterPbftServer(server, pb)
+
+	lis, err := net.Listen("tcp", pb.ch.support.GetIdendity().GetAddr())
+	if err != nil {
+		log.Fatalf("net.Listen err: %v", err)
+	}
+	server.Serve(lis)
+	pb.ch.Start()
+	go pb.startReceiveEnvelope()
 }
 
 func newChain(support consensus.ConsenterSupport) *chain {
 	return &chain{
 		support:   support,
-		sendChan:  make(chan *message),
+		sendChan:  make(chan *message, 200),
 		exitChan:  make(chan struct{}),
-		blockChan: make(chan *cb.Block),
+		blockChan: make(chan *cb.Block, 200),
 		tipsList:  []*cb.Block{},
 
 		blockPool:           make(map[string]*cb.Block),
@@ -228,7 +268,7 @@ func (ch *chain) setCommitConfirmMap(val, val2 string, b bool) {
 	ch.commitConfirmCount[val][val2] = b
 }
 
-func (pb *pbftServer) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*cb.Response, error) {
+func (pb *PbftServer) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*cb.Response, error) {
 	log.Printf("本节点已接收到主节点发来的PrePrepare ...")
 
 	//获取主节点的公钥，用于数字签名验证
@@ -261,7 +301,7 @@ func (pb *pbftServer) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg
 	return &cb.Response{ResCode: true}, nil
 }
 
-func (pb *pbftServer) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.Response, error) {
+func (pb *PbftServer) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.Response, error) {
 	log.Printf("本节点已接收到%s节点发来的Prepare ...", p.NodeID)
 	//获取消息源节点的公钥，用于数字签名验证
 	MessageNodePubKey := pb.ch.support.GetIdendity().GetPubKey(p.NodeID)
@@ -310,7 +350,7 @@ func (pb *pbftServer) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.
 	return &cb.Response{ResCode: true}, nil
 }
 
-func (pb *pbftServer) HandleCommit(ctx context.Context, c *cb.CommitMsg) (*cb.Response, error) {
+func (pb *PbftServer) HandleCommit(ctx context.Context, c *cb.CommitMsg) (*cb.Response, error) {
 	log.Printf("本节点已接收到%s节点发来的Commit ... ", c.NodeID)
 	//获取消息源节点的公钥，用于数字签名验证
 	MessageNodePubKey := pb.ch.support.GetIdendity().GetPubKey(c.NodeID)
