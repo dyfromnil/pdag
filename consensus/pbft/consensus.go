@@ -147,7 +147,9 @@ func (ch *chain) prePrepare() {
 		digest := blkstorage.BlockHeaderDigest(block.Header)
 		log.Printf("已将block存入临时消息池")
 		//存入临时消息池
+		ch.lock.Lock()
 		ch.blockPool[digest] = block
+		ch.lock.Unlock()
 		//主节点对消息摘要进行签名
 		digestByte, _ := hex.DecodeString(digest)
 		signInfo := ch.support.GetIdendity().RsaSignWithSha256(digestByte, ch.support.GetIdendity().GetSelfPivKey())
@@ -250,6 +252,8 @@ func (ch *chain) setCommitConfirmMap(val, val2 string, b bool) {
 
 //HandlePrePrepare for
 func (pb *PbftServer) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*cb.Response, error) {
+	pb.ch.lock.Lock()
+	defer pb.ch.lock.Unlock()
 	log.Printf("本节点已接收到主节点发来的PrePrepare ...")
 
 	//获取主节点的公钥，用于数字签名验证
@@ -264,7 +268,9 @@ func (pb *PbftServer) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg
 	} else {
 		//将信息存入临时消息池
 		log.Printf("已将消息存入临时节点池")
+		// pb.ch.lock.Lock()
 		pb.ch.blockPool[pp.Digest] = pp.Block
+		// pb.ch.lock.Unlock()
 		//节点使用私钥对其签名
 		sign := pb.ch.support.GetIdendity().RsaSignWithSha256(digestByte, pb.ch.support.GetIdendity().GetSelfPivKey())
 		//拼接成Prepare
@@ -283,22 +289,29 @@ func (pb *PbftServer) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg
 }
 
 func (pb *PbftServer) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.Response, error) {
+	pb.ch.lock.Lock()
+	defer pb.ch.lock.Unlock()
 	log.Printf("本节点已接收到%s节点发来的Prepare ...", p.NodeID)
 	//获取消息源节点的公钥，用于数字签名验证
 	MessageNodePubKey := pb.ch.support.GetIdendity().GetPubKey(p.NodeID)
 	digestByte, _ := hex.DecodeString(p.Digest)
-	if _, ok := pb.ch.blockPool[p.Digest]; !ok {
+	// pb.ch.lock.Lock()
+	_, ok := pb.ch.blockPool[p.Digest]
+	// pb.ch.lock.Unlock()
+	if !ok {
 		log.Printf("当前临时消息池无此摘要，拒绝执行commit广播")
 		return &cb.Response{ResCode: false}, errors.New("HandlePrepare digest error")
 	} else if !pb.ch.support.GetIdendity().RsaVerySignWithSha256(digestByte, p.Sign, MessageNodePubKey) {
 		log.Printf("节点签名验证失败！,拒绝执行commit广播")
 		return &cb.Response{ResCode: false}, errors.New("HandlePrepare VerySign error")
 	} else {
+		// pb.ch.lock.Lock()
 		pb.ch.setPrePareConfirmMap(p.Digest, p.NodeID, true)
 		count := 0
 		for range pb.ch.prePareConfirmCount[p.Digest] {
 			count++
 		}
+		// pb.ch.lock.Unlock()
 		//因为主节点不会发送Prepare，所以不包含自己
 		specifiedCount := 0
 		nodeCount := len(pb.ch.support.GetIdendity().GetClusterAddrs())
@@ -308,7 +321,7 @@ func (pb *PbftServer) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.
 			specifiedCount = (nodeCount / 3 * 2) - 1
 		}
 		//如果节点至少收到了2f个prepare的消息（包括自己）,并且没有进行过commit广播，则进行commit广播
-		pb.ch.lock.Lock()
+		// pb.ch.lock.Lock()
 		//获取消息源节点的公钥，用于数字签名验证
 		if count >= specifiedCount && !pb.ch.isCommitBordcast[p.Digest] {
 			log.Printf("本节点已收到至少2f个节点(包括本地节点)发来的Prepare信息 ...")
@@ -326,30 +339,35 @@ func (pb *PbftServer) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.
 			pb.ch.isCommitBordcast[p.Digest] = true
 			log.Printf("commit广播完成")
 		}
-		pb.ch.lock.Unlock()
+		// pb.ch.lock.Unlock()
 	}
 	return &cb.Response{ResCode: true}, nil
 }
 
 func (pb *PbftServer) HandleCommit(ctx context.Context, c *cb.CommitMsg) (*cb.Response, error) {
+	pb.ch.lock.Lock()
+	defer pb.ch.lock.Unlock()
 	log.Printf("本节点已接收到%s节点发来的Commit ... ", c.NodeID)
 	//获取消息源节点的公钥，用于数字签名验证
 	MessageNodePubKey := pb.ch.support.GetIdendity().GetPubKey(c.NodeID)
 	digestByte, _ := hex.DecodeString(c.Digest)
-	if _, ok := pb.ch.prePareConfirmCount[c.Digest]; !ok {
+	// pb.ch.lock.Lock()
+	_, ok := pb.ch.prePareConfirmCount[c.Digest]
+	// pb.ch.lock.Unlock()
+	if !ok {
 		log.Printf("当前prepare池无此摘要，拒绝将信息持久化到本地消息池")
 		return &cb.Response{ResCode: false}, errors.New("HandleCommit digest error")
 	} else if !pb.ch.support.GetIdendity().RsaVerySignWithSha256(digestByte, c.Sign, MessageNodePubKey) {
 		log.Printf("节点签名验证失败！,拒绝将信息持久化到本地消息池")
 		return &cb.Response{ResCode: false}, errors.New("HandleCommit VerySign error")
 	} else {
+		// pb.ch.lock.Lock()
 		pb.ch.setCommitConfirmMap(c.Digest, c.NodeID, true)
 		count := 0
 		for range pb.ch.commitConfirmCount[c.Digest] {
 			count++
 		}
 		//如果节点至少收到了2f+1个commit消息（包括自己）,并且节点没有回复过,并且已进行过commit广播，则提交信息至本地消息池，并reply成功标志至客户端！
-		pb.ch.lock.Lock()
 		nodeCount := len(pb.ch.support.GetIdendity().GetClusterAddrs())
 		if count >= nodeCount/3*2 && !pb.ch.isReply[c.Digest] && pb.ch.isCommitBordcast[c.Digest] {
 			log.Printf("本节点已收到至少2f + 1 个节点(包括本地节点)发来的Commit信息 ...")
@@ -362,7 +380,7 @@ func (pb *PbftServer) HandleCommit(ctx context.Context, c *cb.CommitMsg) (*cb.Re
 			pb.ch.isReply[c.Digest] = true
 			log.Printf("reply完毕")
 		}
-		pb.ch.lock.Unlock()
+		// pb.ch.lock.Unlock()
 	}
 	return &cb.Response{ResCode: true}, nil
 }

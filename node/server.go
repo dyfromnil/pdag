@@ -27,7 +27,7 @@ func Main() {
 	idt.GenRsaKeys()
 
 	if len(os.Args) != 2 {
-		log.Panic("Input error")
+		log.Fatal("Input error")
 	}
 	nodeID := os.Args[1]
 	if _, ok := globleconfig.NodeTable[nodeID]; ok {

@@ -1,7 +1,12 @@
 package main
 
-import "github.com/dyfromnil/pdag/node"
+import (
+	"log"
+
+	"github.com/dyfromnil/pdag/node"
+)
 
 func main() {
+	log.SetFlags(log.Ldate | log.Lshortfile | log.Ltime)
 	node.Main()
 }

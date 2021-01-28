@@ -27,7 +27,7 @@ func NewClient(n int) *Client {
 
 //SendEnv for server starting
 func (client *Client) SendEnv(envCh chan<- cb.Envelope) {
-	fmt.Println("Sending messages...")
+	log.Println("Sending messages...")
 
 	for i := 0; i < client.numOfGorutine; i++ {
 		i0 := i
@@ -63,13 +63,14 @@ func clientTCPListen() {
 		if err != nil {
 			log.Panic(err)
 		}
-		fmt.Println(string(b))
+		log.Println(string(b))
 	}
 
 }
 
 func main() {
-	fmt.Println("Client start...")
+	log.SetFlags(log.Ldate | log.Lshortfile | log.Ltime)
+	log.Println("Client start...")
 
 	go clientTCPListen()
 	log.Printf("客户端开启监听，地址：%s\n", globleconfig.ClientAddr)
@@ -91,10 +92,13 @@ func main() {
 		log.Fatalf("grpc.Dial err: %v", err)
 		panic("Request Error")
 	}
+	i := 0
 	for {
+		log.Println(i)
+		i++
 		env := <-envCh
 		err = stream.Send(&env)
-		time.Sleep(time.Millisecond * 125)
+		time.Sleep(time.Millisecond * 2)
 		if err != nil {
 			panic("Send Error")
 		}
