@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set"
 	cb "github.com/dyfromnil/pdag/proto-go/common"
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"

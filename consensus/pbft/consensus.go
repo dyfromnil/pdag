@@ -136,7 +136,6 @@ func (ch *chain) createBlock() {
 			ch.tipsList = tipsList
 			log.Printf("num of tips:%v", len(tipsList))
 			ch.blockChan <- block
-			// ch.support.Append(block, tipsList)
 		}
 	}
 }
@@ -174,7 +173,6 @@ func (ch *chain) broadcastPrePrepare(pp *cb.PrePrepareMsg) {
 			continue
 		}
 		go func(i string) {
-			log.Printf("---------%s----------", i)
 			conn, err := grpc.Dial(i, grpc.WithInsecure())
 			if err != nil {
 				log.Fatalf("grpc.Dial err: %v", err)
@@ -182,11 +180,12 @@ func (ch *chain) broadcastPrePrepare(pp *cb.PrePrepareMsg) {
 			defer conn.Close()
 
 			client := cb.NewPbftClient(conn)
-			resp, err := client.HandlePrePrepare(context.Background(), pp)
+			_, err = client.HandlePrePrepare(context.Background(), pp)
+			// resp, err := client.HandlePrePrepare(context.Background(), pp)
 			if err != nil {
 				log.Fatalf("client.Search err: %v", err)
 			}
-			log.Printf("resp: %t", resp.GetResCode())
+			// log.Printf("resp: %t", resp.GetResCode())
 		}(i)
 	}
 }
@@ -204,11 +203,11 @@ func (ch *chain) broadcastPrepare(p *cb.PrepareMsg) {
 			defer conn.Close()
 
 			client := cb.NewPbftClient(conn)
-			resp, err := client.HandlePrepare(context.Background(), p)
+			_, err = client.HandlePrepare(context.Background(), p)
 			if err != nil {
 				log.Fatalf("client.Search err: %v", err)
 			}
-			log.Printf("resp: %t", resp.GetResCode())
+			// log.Printf("resp: %t", resp.GetResCode())
 		}(i)
 	}
 }
@@ -226,11 +225,11 @@ func (ch *chain) broadcastCommit(c *cb.CommitMsg) {
 			defer conn.Close()
 
 			client := cb.NewPbftClient(conn)
-			resp, err := client.HandleCommit(context.Background(), c)
+			_, err = client.HandleCommit(context.Background(), c)
 			if err != nil {
 				log.Fatalf("client.Search err: %v", err)
 			}
-			log.Printf("resp: %t", resp.GetResCode())
+			// log.Printf("resp: %t", resp.GetResCode())
 		}(i)
 	}
 }
