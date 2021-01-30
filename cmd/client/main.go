@@ -26,7 +26,7 @@ func NewClient(n int) *Client {
 }
 
 //SendEnv for server starting
-func (client *Client) SendEnv(envCh chan<- cb.Envelope) {
+func (client *Client) SendEnv(envCh chan<- *cb.Envelope) {
 	log.Println("Sending messages...")
 
 	for i := 0; i < client.numOfGorutine; i++ {
@@ -34,7 +34,7 @@ func (client *Client) SendEnv(envCh chan<- cb.Envelope) {
 		go func() {
 			j := 0
 			for {
-				envCh <- cb.Envelope{
+				envCh <- &cb.Envelope{
 					Payload:    []byte(fmt.Sprintf("This is User %d, message %d", i0, j)),
 					Signature:  []byte(fmt.Sprintf("User %d", i0)),
 					Timestamp:  time.Now().UnixNano(),
@@ -75,7 +75,7 @@ func main() {
 	go clientTCPListen()
 	log.Printf("客户端开启监听，地址：%s\n", globleconfig.ClientAddr)
 
-	envCh := make(chan cb.Envelope, 200)
+	envCh := make(chan *cb.Envelope, 200)
 
 	clt := NewClient(3)
 	go clt.SendEnv(envCh)
@@ -97,8 +97,8 @@ func main() {
 		log.Println(i)
 		i++
 		env := <-envCh
-		err = stream.Send(&env)
-		time.Sleep(time.Millisecond * 2)
+		err = stream.Send(env)
+		time.Sleep(time.Millisecond * 5)
 		if err != nil {
 			panic("Send Error")
 		}
