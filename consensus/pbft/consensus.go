@@ -17,8 +17,8 @@ import (
 	"google.golang.org/grpc"
 )
 
-// PbftServer for
-type PbftServer struct {
+// Server for
+type Server struct {
 	ch    *chain
 	envCh chan cb.Envelope
 }
@@ -47,19 +47,20 @@ type message struct {
 	normalMsg *cb.Envelope
 }
 
-//NewPbftServer for
-func NewPbftServer(support consensus.ConsenterSupport) consensus.Consenter {
-	return &PbftServer{
+//NewServer for
+func NewServer(support consensus.ConsenterSupport) consensus.Consenter {
+	return &Server{
 		ch: newChain(support),
 	}
 }
 
-func (pb *PbftServer) HandleChain(support consensus.ConsenterSupport) consensus.Chain {
+//HandleChain for
+func (pb *Server) HandleChain(support consensus.ConsenterSupport) consensus.Chain {
 	return pb.ch
 }
 
-// Start
-func (pb *PbftServer) Start() {
+// Start for
+func (pb *Server) Start() {
 	server := grpc.NewServer()
 	cb.RegisterPbftServer(server, pb)
 
@@ -251,7 +252,7 @@ func (ch *chain) setCommitConfirmMap(val, val2 string, b bool) {
 }
 
 //HandlePrePrepare for
-func (pb *PbftServer) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*cb.Response, error) {
+func (pb *Server) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*cb.Response, error) {
 	pb.ch.lock.Lock()
 	defer pb.ch.lock.Unlock()
 	log.Printf("本节点已接收到主节点发来的PrePrepare ...")
@@ -288,7 +289,8 @@ func (pb *PbftServer) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg
 	return &cb.Response{ResCode: true}, nil
 }
 
-func (pb *PbftServer) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.Response, error) {
+// HandlePrepare for
+func (pb *Server) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.Response, error) {
 	pb.ch.lock.Lock()
 	defer pb.ch.lock.Unlock()
 	log.Printf("本节点已接收到%s节点发来的Prepare ...", p.NodeID)
@@ -344,7 +346,8 @@ func (pb *PbftServer) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.
 	return &cb.Response{ResCode: true}, nil
 }
 
-func (pb *PbftServer) HandleCommit(ctx context.Context, c *cb.CommitMsg) (*cb.Response, error) {
+//HandleCommit for
+func (pb *Server) HandleCommit(ctx context.Context, c *cb.CommitMsg) (*cb.Response, error) {
 	pb.ch.lock.Lock()
 	defer pb.ch.lock.Unlock()
 	log.Printf("本节点已接收到%s节点发来的Commit ... ", c.NodeID)
@@ -379,6 +382,12 @@ func (pb *PbftServer) HandleCommit(ctx context.Context, c *cb.CommitMsg) (*cb.Re
 			tcpDial([]byte(info), globleconfig.ClientAddr)
 			pb.ch.isReply[c.Digest] = true
 			log.Printf("reply完毕")
+
+			// delete(pb.ch.blockPool, c.Digest)
+			// delete(pb.ch.prePareConfirmCount, c.Digest)
+			// delete(pb.ch.commitConfirmCount, c.Digest)
+			// delete(pb.ch.isCommitBordcast, c.Digest)
+			// delete(pb.ch.isReply, c.Digest)
 		}
 		// pb.ch.lock.Unlock()
 	}

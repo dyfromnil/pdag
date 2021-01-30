@@ -44,7 +44,7 @@ func Main() {
 	chainSupport := chain.NewSupport(ledger, &idt)
 
 	//--------- consensus start ---------
-	pbftServer := pbft.NewPbftServer(chainSupport)
+	pbftServer := pbft.NewServer(chainSupport)
 	pbftServer.Start()
 
 	//------------ Leader Node listen Envelopes from clients to envCh -----------
