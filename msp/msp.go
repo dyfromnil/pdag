@@ -11,16 +11,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
-	"strconv"
 
 	"github.com/dyfromnil/pdag/globleconfig"
 )
 
 // IdentityProvider for
 type IdentityProvider interface {
-	GenRsaKeys()
-	GetKeyPair() (prvkey, pubkey []byte)
 	RsaSignWithSha256(data []byte, keyBytes []byte) []byte
 	RsaVerySignWithSha256(data, signData, keyBytes []byte) bool
 	GetPubKey(nodeID string) []byte
@@ -29,107 +25,48 @@ type IdentityProvider interface {
 	GetSelfPubKey() []byte
 	GetClusterAddrs() map[string]string
 	GetNodeID() string
-	GetAddr() string
+	GetAddr(nodeID string) string
+	GetSelfAddr() string
+}
+
+type keyPair struct {
+	privKey []byte
+	pubKey  []byte
 }
 
 // Identity for
 type Identity struct {
-	nodeID     string
-	addr       string
-	rsaPrivKey []byte
-	rsaPubKey  []byte
-	cluster    map[string]string
+	nodeID  string
+	addr    string
+	keyPair keyPair
+	// key:nodeID, value:addr
+	clusterAddrs map[string]string
+	// key:nodeID, value:keyPair
+	clusterKeyPairs map[string]keyPair
 }
 
 // NewIdt for
-func NewIdt(nodeid string) Identity {
-	return Identity{
-		nodeID:     nodeid,
-		addr:       globleconfig.NodeTable[nodeid],
-		rsaPrivKey: getPivKey(nodeid),
-		rsaPubKey:  getPubKey(nodeid),
-		cluster:    globleconfig.NodeTable,
+func NewIdt(nodeid string) *Identity {
+	cKPs := initClusterKeyPairs()
+
+	return &Identity{
+		nodeID:          nodeid,
+		addr:            globleconfig.NodeTable[nodeid],
+		keyPair:         cKPs[nodeid],
+		clusterAddrs:    globleconfig.NodeTable,
+		clusterKeyPairs: cKPs,
 	}
 }
 
-// GenRsaKeys for
-func (iden *Identity) GenRsaKeys() {
-	if !isExist("./Keys") {
-		fmt.Println("检测到还未生成公私钥目录，正在生成公私钥 ...")
-		err := os.Mkdir("Keys", 0666)
-		if err != nil {
-			log.Panic()
+func initClusterKeyPairs() map[string]keyPair {
+	cKPs := make(map[string]keyPair)
+	for key := range globleconfig.NodeTable {
+		cKPs[key] = keyPair{
+			getPivKeyFromFile(key),
+			getPubKeyFromFile(key),
 		}
-
-		n := len(globleconfig.NodeTable)
-
-		for i := 0; i <= n; i++ {
-			if !isExist("./Keys/N" + strconv.Itoa(i)) {
-				err := os.Mkdir("./Keys/N"+strconv.Itoa(i), 0666)
-				if err != nil {
-					log.Panic()
-				}
-			}
-			priv, pub := iden.GetKeyPair()
-			privFileName := "Keys/N" + strconv.Itoa(i) + "/N" + strconv.Itoa(i) + "_RSA_PIV"
-			file, err := os.OpenFile(privFileName, os.O_RDWR|os.O_CREATE, 0666)
-			if err != nil {
-				log.Panic(err)
-			}
-			defer file.Close()
-			file.Write(priv)
-
-			pubFileName := "Keys/N" + strconv.Itoa(i) + "/N" + strconv.Itoa(i) + "_RSA_PUB"
-			file2, err := os.OpenFile(pubFileName, os.O_RDWR|os.O_CREATE, 0666)
-			if err != nil {
-				log.Panic(err)
-			}
-			defer file2.Close()
-			file2.Write(pub)
-		}
-		fmt.Println("已为节点们生成RSA公私钥")
 	}
-}
-
-//GetKeyPair for
-func (iden *Identity) GetKeyPair() (prvkey, pubkey []byte) {
-	// 生成私钥文件
-	privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
-	if err != nil {
-		panic(err)
-	}
-	derStream := x509.MarshalPKCS1PrivateKey(privateKey)
-	block := &pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: derStream,
-	}
-	prvkey = pem.EncodeToMemory(block)
-	publicKey := &privateKey.PublicKey
-	derPkix, err := x509.MarshalPKIXPublicKey(publicKey)
-	if err != nil {
-		panic(err)
-	}
-	block = &pem.Block{
-		Type:  "PUBLIC KEY",
-		Bytes: derPkix,
-	}
-	pubkey = pem.EncodeToMemory(block)
-	return
-}
-
-func isExist(path string) bool {
-	_, err := os.Stat(path)
-	if err != nil {
-		if os.IsExist(err) {
-			return true
-		}
-		if os.IsNotExist(err) {
-			return false
-		}
-		fmt.Println(err)
-		return false
-	}
-	return true
+	return cKPs
 }
 
 //RsaSignWithSha256 for
@@ -177,10 +114,15 @@ func (iden *Identity) RsaVerySignWithSha256(data, signData, keyBytes []byte) boo
 
 // GetPubKey for
 func (iden *Identity) GetPubKey(nodeID string) []byte {
-	return getPubKey(nodeID)
+	return iden.clusterKeyPairs[nodeID].pubKey
 }
 
-func getPubKey(nodeID string) []byte {
+// GetPivKey for
+func (iden *Identity) GetPivKey(nodeID string) []byte {
+	return iden.clusterKeyPairs[nodeID].privKey
+}
+
+func getPubKeyFromFile(nodeID string) []byte {
 	key, err := ioutil.ReadFile("Keys/" + nodeID + "/" + nodeID + "_RSA_PUB")
 	if err != nil {
 		log.Panic(err)
@@ -188,12 +130,7 @@ func getPubKey(nodeID string) []byte {
 	return key
 }
 
-// GetPivKey for
-func (iden *Identity) GetPivKey(nodeID string) []byte {
-	return getPivKey(nodeID)
-}
-
-func getPivKey(nodeID string) []byte {
+func getPivKeyFromFile(nodeID string) []byte {
 	key, err := ioutil.ReadFile("Keys/" + nodeID + "/" + nodeID + "_RSA_PIV")
 	if err != nil {
 		log.Panic(err)
@@ -203,17 +140,17 @@ func getPivKey(nodeID string) []byte {
 
 //GetSelfPivKey for
 func (iden *Identity) GetSelfPivKey() []byte {
-	return iden.rsaPrivKey
+	return iden.keyPair.privKey
 }
 
 //GetSelfPubKey for
 func (iden *Identity) GetSelfPubKey() []byte {
-	return iden.rsaPubKey
+	return iden.keyPair.pubKey
 }
 
 // GetClusterAddrs for
 func (iden *Identity) GetClusterAddrs() map[string]string {
-	return iden.cluster
+	return iden.clusterAddrs
 }
 
 //GetNodeID for
@@ -221,7 +158,12 @@ func (iden *Identity) GetNodeID() string {
 	return iden.nodeID
 }
 
-//GetAddr for
-func (iden *Identity) GetAddr() string {
+//GetSelfAddr for
+func (iden *Identity) GetSelfAddr() string {
 	return iden.addr
+}
+
+//GetAddr for
+func (iden *Identity) GetAddr(nodeID string) string {
+	return iden.clusterAddrs[nodeID]
 }
