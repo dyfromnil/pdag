@@ -23,8 +23,7 @@ func Main() {
 	log.Printf("Server starting...")
 
 	// ----------check identity------------
-	var idt msp.Identity
-	idt.GenRsaKeys()
+	var idt *msp.Identity
 
 	if len(os.Args) != 2 {
 		log.Fatal("Input error")
@@ -41,7 +40,7 @@ func Main() {
 	blkstore, _ := blkstorage.NewBlockStore(conf)
 	ledger := fileledger.NewFileLedger(blkstore)
 
-	chainSupport := chain.NewSupport(ledger, &idt)
+	chainSupport := chain.NewSupport(ledger, idt)
 
 	//--------- consensus start ---------
 	pbftServer := pbft.NewServer(chainSupport)
