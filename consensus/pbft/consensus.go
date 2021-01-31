@@ -64,13 +64,13 @@ func (pb *Server) Start() {
 	server := grpc.NewServer()
 	cb.RegisterPbftServer(server, pb)
 
-	lis, err := net.Listen("tcp", pb.ch.support.GetIdendity().GetAddr())
+	lis, err := net.Listen("tcp", pb.ch.support.GetIdendity().GetSelfAddr())
 	if err != nil {
 		log.Fatalf("net.Listen err: %v", err)
 	}
 	go server.Serve(lis)
 	pb.ch.Start()
-	if pb.ch.support.GetIdendity().GetNodeID() == "N0" {
+	if pb.ch.support.GetIdendity().GetNodeID() == globleconfig.LeaderNodeID {
 		go pb.ch.prePrepare()
 	}
 }
@@ -169,7 +169,7 @@ func (ch *chain) prePrepare() {
 
 func (ch *chain) broadcastPrePrepare(pp *cb.PrePrepareMsg) {
 	for _, i := range ch.support.GetIdendity().GetClusterAddrs() {
-		if i == ch.support.GetIdendity().GetAddr() {
+		if i == ch.support.GetIdendity().GetSelfAddr() {
 			continue
 		}
 		go func(i string) {
@@ -192,7 +192,7 @@ func (ch *chain) broadcastPrePrepare(pp *cb.PrePrepareMsg) {
 
 func (ch *chain) broadcastPrepare(p *cb.PrepareMsg) {
 	for _, i := range ch.support.GetIdendity().GetClusterAddrs() {
-		if i == ch.support.GetIdendity().GetAddr() {
+		if i == ch.support.GetIdendity().GetSelfAddr() {
 			continue
 		}
 		go func(i string) {
@@ -214,7 +214,7 @@ func (ch *chain) broadcastPrepare(p *cb.PrepareMsg) {
 
 func (ch *chain) broadcastCommit(c *cb.CommitMsg) {
 	for _, i := range ch.support.GetIdendity().GetClusterAddrs() {
-		if i == ch.support.GetIdendity().GetAddr() {
+		if i == ch.support.GetIdendity().GetSelfAddr() {
 			continue
 		}
 		go func(i string) {
@@ -257,7 +257,7 @@ func (pb *Server) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*
 	log.Printf("本节点已接收到主节点发来的PrePrepare ...")
 
 	//获取主节点的公钥，用于数字签名验证
-	primaryNodePubKey := pb.ch.support.GetIdendity().GetPubKey("N0")
+	primaryNodePubKey := pb.ch.support.GetIdendity().GetPubKey(globleconfig.LeaderNodeID)
 	digestByte, _ := hex.DecodeString(pp.Digest)
 	if digest := blkstorage.BlockHeaderDigest(pp.Block.Header); digest != pp.Digest {
 		log.Printf("信息摘要对不上，拒绝进行prepare广播")
@@ -316,7 +316,7 @@ func (pb *Server) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.Resp
 		//因为主节点不会发送Prepare，所以不包含自己
 		specifiedCount := 0
 		nodeCount := len(pb.ch.support.GetIdendity().GetClusterAddrs())
-		if pb.ch.support.GetIdendity().GetNodeID() == "N0" {
+		if pb.ch.support.GetIdendity().GetNodeID() == globleconfig.LeaderNodeID {
 			specifiedCount = nodeCount / 3 * 2
 		} else {
 			specifiedCount = (nodeCount / 3 * 2) - 1
