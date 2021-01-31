@@ -20,6 +20,9 @@ const (
 
 	//LeaderListenEnvelopeAddr for
 	LeaderListenEnvelopeAddr = "127.0.0.1:8689"
+
+	//LeaderNodeID for
+	LeaderNodeID = "N0"
 )
 
 //NodeTable for
