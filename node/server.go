@@ -47,7 +47,7 @@ func Main() {
 	pbftServer.Start()
 
 	//------------ Leader Node listen Envelopes from clients to envCh -----------
-	if nodeID == "N0" {
+	if nodeID == globleconfig.LeaderNodeID {
 		listenEnv := grpc.NewServer()
 		sendEnvelopsService := &SendEnvelopsService{
 			ch: pbftServer.HandleChain(chainSupport),
@@ -82,7 +82,7 @@ func (s *SendEnvelopsService) Request(stream cb.SendEnvelops_RequestServer) erro
 			return err
 		}
 
-		log.Printf("Receive Envelope from %s,sendtime:%d", r.GetClientAddr(), r.GetTimestamp())
+		// log.Printf("Receive Envelope from %s,sendtime:%d", r.GetClientAddr(), r.GetTimestamp())
 
 		s.ch.Order(r)
 
