@@ -3,15 +3,17 @@ package pbft
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"log"
 	"net"
 	"sync"
-
-	"github.com/dyfromnil/pdag/globleconfig"
+	"time"
 
 	"github.com/dyfromnil/pdag/chain/blkstorage"
+	"github.com/dyfromnil/pdag/client"
 	"github.com/dyfromnil/pdag/consensus"
+	"github.com/dyfromnil/pdag/globleconfig"
 	cb "github.com/dyfromnil/pdag/proto-go/common"
 
 	"google.golang.org/grpc"
@@ -252,6 +254,7 @@ func (ch *chain) setCommitConfirmMap(val, val2 string, b bool) {
 
 //HandlePrePrepare for
 func (pb *Server) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*cb.Response, error) {
+	time.Sleep(time.Microsecond * 100)
 	pb.ch.lock.Lock()
 	defer pb.ch.lock.Unlock()
 	log.Printf("本节点已接收到主节点发来的PrePrepare ...")
@@ -309,10 +312,18 @@ func (pb *Server) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*
 				//将消息信息，提交到本地消息池中！
 				pb.ch.support.Append(pb.ch.blockPool[c.Digest], pb.ch.tipsList)
 				log.Println("Delete digest from pool: ", c.Digest)
-				info := pb.ch.support.GetIdendity().GetNodeID() + "节点已将当前block存入本地账本中"
-				log.Printf(info)
+				log.Println(pb.ch.support.GetIdendity().GetNodeID() + "节点已将当前block存入本地账本中")
 				log.Printf("正在reply客户端 ...")
-				tcpDial([]byte(info), globleconfig.ClientAddr)
+				reply := client.Msg{
+					Digest:     c.Digest,
+					NumOfTranc: len(pb.ch.blockPool[c.Digest].Data.Data),
+					NodeID:     pb.ch.support.GetIdendity().GetNodeID(),
+				}
+				replyBytes, err := json.Marshal(reply)
+				if err != nil {
+					log.Fatal("Marshal Error!")
+				}
+				tcpDial(replyBytes, globleconfig.ClientAddr)
 				pb.ch.isReply[c.Digest] = true
 				log.Printf("reply完毕")
 			}
@@ -323,6 +334,7 @@ func (pb *Server) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*
 
 // HandlePrepare for
 func (pb *Server) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.Response, error) {
+	time.Sleep(time.Microsecond * 100)
 	pb.ch.lock.Lock()
 	defer pb.ch.lock.Unlock()
 	log.Printf("本节点已接收到%s节点发来的Prepare ...", p.NodeID)
@@ -367,10 +379,18 @@ func (pb *Server) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.Resp
 				//将消息信息，提交到本地消息池中！
 				pb.ch.support.Append(pb.ch.blockPool[p.Digest], pb.ch.tipsList)
 				log.Println("Delete digest from pool: ", p.Digest)
-				info := pb.ch.support.GetIdendity().GetNodeID() + "节点已将当前block存入本地账本中"
-				log.Printf(info)
+				log.Println(pb.ch.support.GetIdendity().GetNodeID() + "节点已将当前block存入本地账本中")
 				log.Printf("正在reply客户端 ...")
-				tcpDial([]byte(info), globleconfig.ClientAddr)
+				reply := client.Msg{
+					Digest:     c.Digest,
+					NumOfTranc: len(pb.ch.blockPool[c.Digest].Data.Data),
+					NodeID:     pb.ch.support.GetIdendity().GetNodeID(),
+				}
+				replyBytes, err := json.Marshal(reply)
+				if err != nil {
+					log.Fatal("Marshal Error!")
+				}
+				tcpDial(replyBytes, globleconfig.ClientAddr)
 				pb.ch.isReply[p.Digest] = true
 				log.Printf("reply完毕")
 			}
@@ -396,6 +416,7 @@ func (pb *Server) canPrepared(digest string) bool {
 
 //HandleCommit for
 func (pb *Server) HandleCommit(ctx context.Context, c *cb.CommitMsg) (*cb.Response, error) {
+	time.Sleep(time.Microsecond * 100)
 	pb.ch.lock.Lock()
 	defer pb.ch.lock.Unlock()
 	log.Printf("本节点已接收到%s节点发来的Commit ... ", c.NodeID)
@@ -421,10 +442,18 @@ func (pb *Server) HandleCommit(ctx context.Context, c *cb.CommitMsg) (*cb.Respon
 			//将消息信息，提交到本地消息池中！
 			pb.ch.support.Append(pb.ch.blockPool[c.Digest], pb.ch.tipsList)
 			log.Println("Delete digest from pool: ", c.Digest)
-			info := pb.ch.support.GetIdendity().GetNodeID() + "节点已将当前block存入本地账本中"
-			log.Printf(info)
+			log.Println(pb.ch.support.GetIdendity().GetNodeID() + "节点已将当前block存入本地账本中")
 			log.Printf("正在reply客户端 ...")
-			tcpDial([]byte(info), globleconfig.ClientAddr)
+			reply := client.Msg{
+				Digest:     c.Digest,
+				NumOfTranc: len(pb.ch.blockPool[c.Digest].Data.Data),
+				NodeID:     pb.ch.support.GetIdendity().GetNodeID(),
+			}
+			replyBytes, err := json.Marshal(reply)
+			if err != nil {
+				log.Fatal("Marshal Error!")
+			}
+			tcpDial(replyBytes, globleconfig.ClientAddr)
 			pb.ch.isReply[c.Digest] = true
 			log.Printf("reply完毕")
 		}

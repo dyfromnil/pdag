@@ -15,5 +15,5 @@ exper:
 	sudo cp -r experiment/server0/ experiment/server2/
 	sudo cp -r experiment/server0/ experiment/server3/
 
-client:
+cli:
 	go build -o experiment/client/main cmd/client/main.go
