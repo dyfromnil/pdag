@@ -27,7 +27,7 @@ type Client struct {
 	lastCheckPoint checkPoint
 	envCh          chan *cb.Envelope
 	procRepCh      chan *Msg
-	stopCh         chan bool
+	StopCh         chan os.Signal
 	file           *os.File
 }
 
@@ -45,7 +45,7 @@ type checkPoint struct {
 
 //NewClient for
 func NewClient(n int) *Client {
-	file, err := os.OpenFile("./tps.log", os.O_RDWR|os.O_CREATE|os.O_CREATE, 0660)
+	file, err := os.OpenFile("./tps.log", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
 	if err != nil {
 		log.Fatal("error opening tps log file writer for file tps.log")
 	}
@@ -57,6 +57,7 @@ func NewClient(n int) *Client {
 		lastCheckPoint: checkPoint{0, 0},
 		envCh:          make(chan *cb.Envelope, 2000),
 		procRepCh:      make(chan *Msg, 2000),
+		StopCh:         make(chan os.Signal),
 		file:           file,
 	}
 }
@@ -98,16 +99,17 @@ func (client *Client) SendEnv() {
 	}
 	i := 0
 	for {
-		log.Println(i)
+		// log.Println(i)
 		i++
 		env := <-client.envCh
 		err = stream.Send(env)
-		time.Sleep(time.Millisecond * 1)
+		time.Sleep(time.Millisecond * 10)
 		if err != nil {
 			panic("Send Error")
 		}
 
-		resp, err := stream.Recv()
+		// resp, err := stream.Recv()
+		_, err := stream.Recv()
 		if err == io.EOF {
 			break
 		}
@@ -116,7 +118,7 @@ func (client *Client) SendEnv() {
 			panic("Receive Error")
 		}
 
-		log.Printf("Response:%t", resp.ResCode)
+		// log.Printf("Response:%t", resp.ResCode)
 	}
 	stream.CloseSend()
 }
@@ -152,8 +154,6 @@ func (client *Client) ReceiveReplyFromNodes() {
 
 func (client *Client) updateReceiveNumsOrCheckPoint() {
 	ticker := time.NewTicker(time.Duration(time.Second))
-	signCh := make(chan os.Signal)
-	signal.Notify(signCh, os.Interrupt)
 	for {
 		select {
 		case msg := <-client.procRepCh:
@@ -169,15 +169,14 @@ func (client *Client) updateReceiveNumsOrCheckPoint() {
 			client.lastCheckPoint.receNums = client.receiveNums
 			client.lastCheckPoint.timeStamp = now
 			client.file.WriteString(fmt.Sprintln(time.Now(), " The current tps: ", tps))
-		case <-signCh:
-			client.file.Sync()
-			client.file.Close()
-			client.stopCh <- true
 		}
 	}
 }
 
 // WaitGracefulStop for
 func (client *Client) WaitGracefulStop() {
-	<-client.stopCh
+	signal.Notify(client.StopCh, os.Interrupt)
+	<-client.StopCh
+
+	client.file.Close()
 }
