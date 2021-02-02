@@ -23,7 +23,7 @@ type Ledger struct {
 	blockStore      blkstorage.BlockStore
 	round           int64                    //轮次
 	roundDigestPost map[int64]map[string]int //第几轮哪个区块的目前的后继区块数
-	preBlocksDigest map[string][]string      //当前区块的前驱区块,所有的string均为区块的digest
+	preBlocksDigest map[string][]string      //当前区块的前驱区块digest,所有的string均为区块的digest
 	digestToHash    map[string][]byte        //digest对应的hash值
 
 	lock sync.Mutex
@@ -49,11 +49,16 @@ func NewLedger(blockStore blkstorage.BlockStore) *Ledger {
 
 // Append a new block to the ledger
 func (fl *Ledger) Append(block *cb.Block) error {
+	fl.lock.Lock()
+	defer fl.lock.Unlock()
 	if err := fl.blockStore.AddBlock(block); err != nil {
 		return err
 	}
 
-	// for _,digest:=range fl.preBlocksDigest[]
+	bhd := blkstorage.BlockHeaderDigest(block.Header)
+	for _, digest := range fl.preBlocksDigest[bhd] {
+		fl.garbageCollect(digest)
+	}
 
 	return nil
 }
@@ -146,4 +151,17 @@ func (fl *Ledger) setRoundDigestPost(val int64, val2 string, b int) {
 		fl.roundDigestPost[val] = make(map[string]int)
 	}
 	fl.roundDigestPost[val][val2] = b
+}
+
+func (fl *Ledger) garbageCollect(digest string) {
+	delete(fl.digestToHash, digest)
+	delete(fl.preBlocksDigest, digest)
+	for rd := range fl.roundDigestPost {
+		if _, ok := fl.roundDigestPost[rd][digest]; ok {
+			delete(fl.roundDigestPost[rd], digest)
+			if len(fl.roundDigestPost) == 0 {
+				delete(fl.roundDigestPost, rd)
+			}
+		}
+	}
 }
