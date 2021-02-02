@@ -62,7 +62,7 @@ type Chain interface {
 type ConsenterSupport interface {
 	// BlockCutter returns the block cutting helper for this channel.
 	BlockCutter() blockcutter.Receiver
-	CreateNextBlock(messages []*cb.Envelope) *cb.Block
+	CreateNextBlock(messages []*cb.Envelope, preRefNum int) *cb.Block
 	VerifyCurrentBlock(*cb.Block) bool
 	Append(block *cb.Block) error
 	GetIdendity() msp.IdentityProvider
