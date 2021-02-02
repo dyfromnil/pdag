@@ -10,7 +10,7 @@ import (
 
 	"github.com/dyfromnil/pdag/chain"
 	"github.com/dyfromnil/pdag/chain/blkstorage"
-	"github.com/dyfromnil/pdag/chain/blockledger/fileledger"
+	"github.com/dyfromnil/pdag/chain/blockledger"
 	"github.com/dyfromnil/pdag/consensus"
 	"github.com/dyfromnil/pdag/consensus/pbft"
 	"github.com/dyfromnil/pdag/globleconfig"
@@ -38,7 +38,7 @@ func Main() {
 	//----- config node : ledger and consensus -----
 	conf := blkstorage.NewConf("", 0)
 	blkstore, _ := blkstorage.NewBlockStore(conf)
-	ledger := fileledger.NewFileLedger(blkstore)
+	ledger := blockledger.NewLedger(blkstore)
 
 	chainSupport := chain.NewSupport(ledger, idt)
 
