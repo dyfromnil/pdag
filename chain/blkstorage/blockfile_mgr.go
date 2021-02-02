@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/davecgh/go-spew/spew"
-	mapset "github.com/deckarep/golang-set"
 	cb "github.com/dyfromnil/pdag/proto-go/common"
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
@@ -109,21 +108,10 @@ func (mgr *blockfileMgr) close() {
 	mgr.currentFileWriter.close()
 }
 
-func (mgr *blockfileMgr) TipsBlock() []*cb.Block {
-	var blkList []*cb.Block
-	it := mgr.blockfilesInfo.tips.Iterator()
-	for elem := range it.C {
-		blkList = append(blkList, elem.(*cb.Block))
-	}
-	it.Stop()
-	return blkList
-}
-
 func (mgr *blockfileMgr) moveToNextFile() {
 	blkfilesInfo := &blockfilesInfo{
 		latestFileNumber: mgr.blockfilesInfo.latestFileNumber + 1,
 		latestFileSize:   0,
-		tips:             mgr.blockfilesInfo.tips,
 	}
 
 	nextFileWriter, err := newBlockfileWriter(
@@ -138,7 +126,7 @@ func (mgr *blockfileMgr) moveToNextFile() {
 	mgr.updateBlockfilesInfo(blkfilesInfo)
 }
 
-func (mgr *blockfileMgr) addBlock(block *cb.Block, tips []*cb.Block) error {
+func (mgr *blockfileMgr) addBlock(block *cb.Block) error {
 	// Add the previous hash check - Though, not essential but may not be a bad idea to
 	// verify the field `block.Header.PreviousHash` present in the block.
 	// This check is a simple bytes comparison and hence does not cause any observable performance penalty
@@ -176,18 +164,12 @@ func (mgr *blockfileMgr) addBlock(block *cb.Block, tips []*cb.Block) error {
 		return errors.WithMessage(err, "error appending block to file")
 	}
 
-	for _, tip := range tips {
-		mgr.blockfilesInfo.tips.Remove(tip)
-	}
-	mgr.blockfilesInfo.tips.Add(block)
-
 	//Update the blockfilesInfo with the results of adding the new block
 	currentBlkfilesInfo := mgr.blockfilesInfo
 	newBlkfilesInfo := &blockfilesInfo{
 		latestFileNumber: currentBlkfilesInfo.latestFileNumber,
 		latestFileSize:   currentBlkfilesInfo.latestFileSize + totalBytesToAppend,
 		noBlockFiles:     false,
-		tips:             mgr.blockfilesInfo.tips,
 	}
 	//save the blockfilesInfo in the database
 
@@ -222,7 +204,6 @@ type blockfilesInfo struct {
 	latestFileNumber int
 	latestFileSize   int
 	noBlockFiles     bool
-	tips             mapset.Set
 }
 
 // constructBlockfilesInfo scans the last blockfile (if any) and construct the blockfilesInfo
@@ -235,7 +216,6 @@ func constructBlockfilesInfo(rootDir string) (*blockfilesInfo, error) {
 		latestFileNumber: 0,
 		latestFileSize:   0,
 		noBlockFiles:     true,
-		tips:             mapset.NewSet(),
 	}
 	return blkfilesInfo, nil
 }

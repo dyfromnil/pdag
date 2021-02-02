@@ -58,30 +58,12 @@ type Chain interface {
 	Halt()
 }
 
-//go:generate counterfeiter -o mocks/mock_consenter_support.go . ConsenterSupport
-
 // ConsenterSupport provides the resources available to a Consenter implementation.
 type ConsenterSupport interface {
-	// VerifyBlockSignature verifies a signature of a block with a given optional
-	// configuration (can be nil).
-	// VerifyBlockSignature() error
-
 	// BlockCutter returns the block cutting helper for this channel.
 	BlockCutter() blockcutter.Receiver
-
-	// CreateNextBlock takes a list of messages and creates the next block based on the block with highest block number committed to the ledger
-	// Note that either WriteBlock or WriteConfigBlock must be called before invoking this method a second time.
-	CreateNextBlock(messages []*cb.Envelope) (*cb.Block, []*cb.Block)
-
-	// Block returns blocks which are tips of ledger
-	TipsBlock() []*cb.Block
-
-	// WriteBlock commits a block to the ledger.
-	// WriteBlock(block *cb.Block, encodedMetadataValue []byte)
-
-	// Append appends a new block to the ledger in its raw form,
-	// unlike WriteBlock that also mutates its metadata.
-	Append(block *cb.Block, tips []*cb.Block) error
-
+	CreateNextBlock(messages []*cb.Envelope) *cb.Block
+	VerifyCurrentBlock(*cb.Block) bool
+	Append(block *cb.Block) error
 	GetIdendity() msp.IdentityProvider
 }

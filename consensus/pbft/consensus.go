@@ -30,19 +30,14 @@ type chain struct {
 	sendChan  chan *message
 	exitChan  chan struct{}
 	blockChan chan *cb.Block
-	tipsList  []*cb.Block
 
 	lock sync.Mutex
-	//临时消息池，消息摘要对应消息本体
-	blockPool map[string]*cb.Block
-	//存放收到的prepare数量(至少需要收到并确认2f个)，根据摘要来对应
-	prePareConfirmCount map[string]map[string]bool
-	//存放收到的commit数量（至少需要收到并确认2f+1个），根据摘要来对应
-	commitConfirmCount map[string]map[string]bool
-	//该笔消息是否已进行Commit广播
-	isCommitBordcast map[string]bool
-	//该笔消息是否已对客户端进行Reply
-	isReply map[string]bool
+
+	blockPool           map[string]*cb.Block       //临时消息池，消息摘要对应消息本体
+	prePareConfirmCount map[string]map[string]bool //存放收到的prepare数量(至少需要收到并确认2f个)，根据摘要来对应
+	commitConfirmCount  map[string]map[string]bool //存放收到的commit数量（至少需要收到并确认2f+1个），根据摘要来对应
+	isCommitBordcast    map[string]bool            //该笔消息是否已进行Commit广播
+	isReply             map[string]bool            //该笔消息是否已对客户端进行Reply
 }
 
 type message struct {
@@ -83,7 +78,6 @@ func newChain(support consensus.ConsenterSupport) *chain {
 		sendChan:  make(chan *message, 200),
 		exitChan:  make(chan struct{}),
 		blockChan: make(chan *cb.Block, 200),
-		tipsList:  []*cb.Block{},
 
 		blockPool:           make(map[string]*cb.Block),
 		prePareConfirmCount: make(map[string]map[string]bool),
@@ -134,9 +128,9 @@ func (ch *chain) createBlock() {
 		batches, _ := ch.support.BlockCutter().Ordered(msg.normalMsg)
 
 		for _, batch := range batches {
-			block, tipsList := ch.support.CreateNextBlock(batch)
-			ch.tipsList = tipsList
-			log.Printf("num of tips:%v", len(tipsList))
+			block := ch.support.CreateNextBlock(batch)
+			digest := blkstorage.BlockHeaderDigest(block.Header)
+			ch.setRoundDigestPost(ch.round, digest, 0)
 			ch.blockChan <- block
 		}
 	}
@@ -234,6 +228,14 @@ func (ch *chain) broadcastCommit(c *cb.CommitMsg) {
 			// log.Printf("resp: %t", resp.GetResCode())
 		}(i)
 	}
+}
+
+//为多重映射开辟赋值
+func (ch *chain) setRoundDigestPost(val int, val2 string, b int) {
+	if _, ok := ch.roundDigestPost[val]; !ok {
+		ch.roundDigestPost[val] = make(map[string]int)
+	}
+	ch.prePareConfirmCount[val][val2] = b
 }
 
 //为多重映射开辟赋值

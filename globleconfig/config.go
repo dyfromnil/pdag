@@ -8,6 +8,9 @@ const (
 	//BatchTimeOut is
 	BatchTimeOut = 2
 
+	//PostReference for
+	PostReference = 3
+
 	//BlockStorageDir is
 	BlockStorageDir = "./"
 	// ChainsDir is the name of the directory containing the channel ledgers.

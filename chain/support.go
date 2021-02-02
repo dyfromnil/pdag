@@ -24,8 +24,18 @@ func NewSupport(lg blockledger.ReadWriter, ident msp.IdentityProvider) *Support 
 }
 
 //CreateNextBlock for
-func (s *Support) CreateNextBlock(messages []*cb.Envelope) (*cb.Block, []*cb.Block) {
+func (s *Support) CreateNextBlock(messages []*cb.Envelope) *cb.Block {
 	return s.ReadWriter.CreateNextBlock(messages)
+}
+
+//Append for
+func (s *Support) Append(block *cb.Block) error {
+	return s.ReadWriter.Append(block)
+}
+
+//VerifyCurrentBlock for
+func (s *Support) VerifyCurrentBlock(block *cb.Block) bool {
+	return s.ReadWriter.VerifyCurrentBlock(block)
 }
 
 //BlockCutter for
