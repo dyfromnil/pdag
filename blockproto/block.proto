@@ -34,6 +34,8 @@ message Block {
 message BlockHeader {
     repeated bytes previous_hash = 1; // The hash of the previous block header
     bytes data_hash = 2; // The hash of the BlockData, by MerkleTree
+    int64 round = 3;
+    int64 timestamp = 4;
 }
 
 message BlockData {
