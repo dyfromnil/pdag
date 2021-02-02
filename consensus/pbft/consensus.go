@@ -30,6 +30,10 @@ type chain struct {
 	exitChan  chan struct{}
 	blockChan chan *cb.Block
 
+	lastEnvWaitingNum int //上一时刻等待被打包的transaction数量
+	lastDiff          int //上次的diff
+	lastPreRef        int //上个区块的前驱引用数
+
 	lock sync.Mutex
 
 	blockPool           map[string]*cb.Block       //临时消息池，消息摘要对应消息本体
@@ -74,9 +78,13 @@ func (pb *Server) Start() {
 func newChain(support consensus.ConsenterSupport) *chain {
 	return &chain{
 		support:   support,
-		sendChan:  make(chan *message, 200),
+		sendChan:  make(chan *message, 20000),
 		exitChan:  make(chan struct{}),
 		blockChan: make(chan *cb.Block, 200),
+
+		lastEnvWaitingNum: 0,
+		lastDiff:          0,
+		lastPreRef:        1,
 
 		blockPool:           make(map[string]*cb.Block),
 		prePareConfirmCount: make(map[string]map[string]bool),
@@ -87,7 +95,7 @@ func newChain(support consensus.ConsenterSupport) *chain {
 }
 
 func (ch *chain) Start() {
-	go ch.createBlock()
+	go ch.createBlock(0.7)
 }
 
 func (ch *chain) Halt() {
@@ -121,16 +129,52 @@ func (ch *chain) Errored() <-chan struct{} {
 	return ch.exitChan
 }
 
-func (ch *chain) createBlock() {
+func (ch *chain) createBlock(rate float32) {
 	for {
 		msg := <-ch.sendChan
 		batches, _ := ch.support.BlockCutter().Ordered(msg.normalMsg)
 
 		for _, batch := range batches {
-			block := ch.support.CreateNextBlock(batch)
+			diff := float32(len(ch.sendChan)-ch.lastEnvWaitingNum)*rate + (1-rate)*float32(ch.lastDiff)
+
+			var refNum int
+			scale := abs(diff / float32(ch.lastDiff))
+			if diff > 0 {
+				refNum = min(int(ch.lastPreRef*int(1+scale)), 10)
+			} else {
+				refNum = max(int(ch.lastPreRef*int(1-scale)), 1)
+			}
+
+			ch.lastPreRef = refNum
+
+			block := ch.support.CreateNextBlock(batch, refNum)
 			ch.blockChan <- block
+
+			ch.lastEnvWaitingNum = len(ch.sendChan)
+			ch.lastDiff = int(diff)
 		}
 	}
+}
+
+func max(a int, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func min(a int, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func abs(a float32) float32 {
+	if a < 0 {
+		a = -a
+	}
+	return a
 }
 
 func (ch *chain) prePrepare() {
