@@ -103,7 +103,7 @@ func (client *Client) SendEnv() {
 		i++
 		env := <-client.envCh
 		err = stream.Send(env)
-		time.Sleep(time.Millisecond * 10)
+		// time.Sleep(time.Millisecond * 1)
 		if err != nil {
 			panic("Send Error")
 		}

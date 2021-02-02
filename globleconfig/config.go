@@ -2,9 +2,9 @@ package globleconfig
 
 const (
 	//PreferredMaxBytes is
-	PreferredMaxBytes = 1024
+	PreferredMaxBytes = 1024 * 1024 * 3
 	//MaxMessageCount is
-	MaxMessageCount = 30
+	MaxMessageCount = 1000
 	//BatchTimeOut is
 	BatchTimeOut = 2
 
