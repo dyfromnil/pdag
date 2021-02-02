@@ -146,10 +146,9 @@ func (ch *chain) main() {
 func worker(wg *sync.WaitGroup, batchCh chan []*cb.Envelope, ch *chain) {
 	defer wg.Done()
 	for batch := range batchCh {
-		block, tipsList := ch.support.CreateNextBlock(batch)
-		fmt.Println("num of tips:", len(tipsList))
+		block := ch.support.CreateNextBlock(batch)
 		time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)*4+300))
-		ch.support.Append(block, tipsList)
+		ch.support.Append(block)
 	}
 }
 func createWorkerPool(numOfWorkers int, batchCh chan []*cb.Envelope, ch *chain) {
