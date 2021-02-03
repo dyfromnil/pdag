@@ -10,6 +10,8 @@ const (
 
 	//PostReference for
 	PostReference = 3
+	//PbftNumOfGoroutine for
+	PbftNumOfGoroutine = 3
 
 	//BlockStorageDir is
 	BlockStorageDir = "./"

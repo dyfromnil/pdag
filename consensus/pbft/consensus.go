@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/dyfromnil/pdag/chain/blkstorage"
 	"github.com/dyfromnil/pdag/client"
@@ -34,7 +35,8 @@ type chain struct {
 	lastDiff          int //上次的diff
 	lastPreRef        int //上个区块的前驱引用数
 
-	lock sync.Mutex
+	lock  sync.Mutex
+	cntCh chan bool
 
 	blockPool           map[string]*cb.Block       //临时消息池，消息摘要对应消息本体
 	prePareConfirmCount map[string]map[string]bool //存放收到的prepare数量(至少需要收到并确认2f个)，根据摘要来对应
@@ -80,7 +82,8 @@ func newChain(support consensus.ConsenterSupport) *chain {
 		support:   support,
 		sendChan:  make(chan *message, 20000),
 		exitChan:  make(chan struct{}),
-		blockChan: make(chan *cb.Block, 200),
+		blockChan: make(chan *cb.Block, 20),
+		cntCh:     make(chan bool, 10), //num of pbft goroutines
 
 		lastEnvWaitingNum: 0,
 		lastDiff:          0,
@@ -179,6 +182,7 @@ func abs(a float32) float32 {
 
 func (ch *chain) prePrepare() {
 	for {
+		ch.cntCh <- true
 		//获取消息摘要
 		block := <-ch.blockChan
 		digest := blkstorage.BlockHeaderDigest(block.Header)
@@ -349,6 +353,9 @@ func (pb *Server) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*
 				log.Printf("本节点已收到至少2f + 1 个节点(包括本地节点)发来的Commit信息 ...")
 				//将消息信息，提交到本地消息池中！
 				pb.ch.support.Append(pb.ch.blockPool[c.Digest])
+				if pb.ch.support.GetIdendity().GetNodeID() == globleconfig.LeaderNodeID {
+					<-pb.ch.cntCh
+				}
 				log.Println("Delete digest from pool: ", c.Digest)
 				log.Println(pb.ch.support.GetIdendity().GetNodeID() + "节点已将当前block存入本地账本中")
 				log.Printf("正在reply客户端 ...")
@@ -415,6 +422,9 @@ func (pb *Server) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.Resp
 				log.Printf("本节点已收到至少2f + 1 个节点(包括本地节点)发来的Commit信息 ...")
 				//将消息信息，提交到本地消息池中！
 				pb.ch.support.Append(pb.ch.blockPool[p.Digest])
+				if pb.ch.support.GetIdendity().GetNodeID() == globleconfig.LeaderNodeID {
+					<-pb.ch.cntCh
+				}
 				log.Println("Delete digest from pool: ", p.Digest)
 				log.Println(pb.ch.support.GetIdendity().GetNodeID() + "节点已将当前block存入本地账本中")
 				log.Printf("正在reply客户端 ...")
@@ -453,6 +463,7 @@ func (pb *Server) canPrepared(digest string) bool {
 
 //HandleCommit for
 func (pb *Server) HandleCommit(ctx context.Context, c *cb.CommitMsg) (*cb.Response, error) {
+	time.Sleep(time.Millisecond * 500)
 	pb.ch.lock.Lock()
 	defer pb.ch.lock.Unlock()
 	log.Printf("本节点已接收到%s节点发来的Commit ... ", c.NodeID)
@@ -477,6 +488,9 @@ func (pb *Server) HandleCommit(ctx context.Context, c *cb.CommitMsg) (*cb.Respon
 			log.Printf("本节点已收到至少2f + 1 个节点(包括本地节点)发来的Commit信息 ...")
 			//将消息信息，提交到本地消息池中！
 			pb.ch.support.Append(pb.ch.blockPool[c.Digest])
+			if pb.ch.support.GetIdendity().GetNodeID() == globleconfig.LeaderNodeID {
+				<-pb.ch.cntCh
+			}
 			log.Println("Delete digest from pool: ", c.Digest)
 			log.Println(pb.ch.support.GetIdendity().GetNodeID() + "节点已将当前block存入本地账本中")
 			log.Printf("正在reply客户端 ...")
