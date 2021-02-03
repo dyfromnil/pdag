@@ -83,7 +83,7 @@ func newChain(support consensus.ConsenterSupport) *chain {
 		sendChan:  make(chan *message, 20000),
 		exitChan:  make(chan struct{}),
 		blockChan: make(chan *cb.Block, 20),
-		cntCh:     make(chan bool, 10), //num of pbft goroutines
+		cntCh:     make(chan bool, globleconfig.PbftNumOfGoroutine), //num of pbft goroutines
 
 		lastEnvWaitingNum: 0,
 		lastDiff:          0,
