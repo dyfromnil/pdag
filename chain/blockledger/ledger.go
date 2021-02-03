@@ -36,6 +36,7 @@ func NewLedger(blockStore blkstorage.BlockStore) *Ledger {
 		round:           1,
 		roundDigestPost: make(map[int64]map[string]int),
 		preBlocksDigest: make(map[string][]string),
+		digestToHash:    make(map[string][]byte),
 	}
 	gensisBlock := blkstorage.GensisBlock()
 	fl.lock.Lock()
