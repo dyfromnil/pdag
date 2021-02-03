@@ -4,7 +4,7 @@ const (
 	//PreferredMaxBytes is
 	PreferredMaxBytes = 1024 * 1024 * 3
 	//MaxMessageCount is
-	MaxMessageCount = 1000
+	MaxMessageCount = 50
 	//BatchTimeOut is
 	BatchTimeOut = 2
 
