@@ -45,7 +45,10 @@ type checkPoint struct {
 
 //NewClient for
 func NewClient(n int) *Client {
-	file, err := os.OpenFile("./tps.log", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
+	if err := os.MkdirAll("./log", 0755); err != nil {
+		log.Fatalln("error while creating dir:'./log'")
+	}
+	file, err := os.OpenFile("./log/tps.log", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
 	if err != nil {
 		log.Fatal("error opening tps log file writer for file tps.log")
 	}

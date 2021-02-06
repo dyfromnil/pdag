@@ -8,7 +8,6 @@ import (
 	"log"
 	"net"
 	"sync"
-	"time"
 
 	"github.com/dyfromnil/pdag/chain/blkstorage"
 	"github.com/dyfromnil/pdag/client"
@@ -463,7 +462,6 @@ func (pb *Server) canPrepared(digest string) bool {
 
 //HandleCommit for
 func (pb *Server) HandleCommit(ctx context.Context, c *cb.CommitMsg) (*cb.Response, error) {
-	time.Sleep(time.Millisecond * 500)
 	pb.ch.lock.Lock()
 	defer pb.ch.lock.Unlock()
 	log.Printf("本节点已接收到%s节点发来的Commit ... ", c.NodeID)

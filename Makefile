@@ -2,7 +2,9 @@ dag:
 	rm -rf proto-go/*
 	protoc --go_out=plugins=grpc:. ./blockproto/block.proto
 
+exper:export CGO_ENABLED=0
 exper:
+	@echo $(CGO_ENABLED)
 	sudo rm -rf experiment
 	go build -o experiment/client/main cmd/client/main.go
 	go build -o experiment/server0/main cmd/server/main.go
