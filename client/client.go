@@ -156,7 +156,7 @@ func (client *Client) ReceiveReplyFromNodes() {
 }
 
 func (client *Client) updateReceiveNumsOrCheckPoint() {
-	ticker := time.NewTicker(time.Duration(time.Second))
+	ticker := time.NewTicker(time.Duration(time.Second * 5))
 	for {
 		select {
 		case msg := <-client.procRepCh:

@@ -1,0 +1,17 @@
+version: '3'
+
+networks:
+  dynet:
+
+services: 
+  client:
+    container_name: client
+    image: client:latest
+    working_dir: /home/dy/client
+    # command: 
+    volumes: 
+      - ../experiment/client/log:/home/dy/client/log
+    # ports: 
+    
+    networks: 
+      - dynet

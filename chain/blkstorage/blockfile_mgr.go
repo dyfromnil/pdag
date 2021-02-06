@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/davecgh/go-spew/spew"
 	cb "github.com/dyfromnil/pdag/proto-go/common"
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
@@ -68,7 +67,7 @@ At start up a new manager:
   *)  Updates blockchain info used by the APIs
 */
 func newBlockfileMgr(conf *Conf) (*blockfileMgr, error) {
-	fmt.Println("newBlockfileMgr() initializing file-based block storage for ledger")
+	// fmt.Println("newBlockfileMgr() initializing file-based block storage for ledger")
 	rootDir := conf.getLedgerBlockDir()
 	_, err := CreateDirIfMissing(rootDir)
 	if err != nil {
@@ -76,12 +75,12 @@ func newBlockfileMgr(conf *Conf) (*blockfileMgr, error) {
 	}
 	mgr := &blockfileMgr{rootDir: rootDir, conf: conf}
 
-	fmt.Printf(`Getting block information from block storage`)
+	// fmt.Printf(`Getting block information from block storage`)
 	var blockfilesInfo *blockfilesInfo
 	if blockfilesInfo, err = constructBlockfilesInfo(rootDir); err != nil {
 		panic(fmt.Sprintf("Could not build blockfilesInfo info from block files: %s", err))
 	}
-	fmt.Printf("Info constructed by scanning the blocks dir = %s", spew.Sdump(blockfilesInfo))
+	// fmt.Printf("Info constructed by scanning the blocks dir = %s", spew.Sdump(blockfilesInfo))
 
 	currentFileWriter, err := newBlockfileWriter(deriveBlockfilePath(rootDir, blockfilesInfo.latestFileNumber))
 	if err != nil {
