@@ -1,0 +1,69 @@
+version: '3'
+
+networks:
+  dynet:
+
+services: 
+  client:
+    container_name: client
+    image: client:latest
+    working_dir: /home/dy/client
+    # command: 
+    volumes: 
+      - ../experiment/client/log:/home/dy/client/log
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server0:
+    container_name: server0
+    image: server:latest
+    working_dir: /home/dy/server
+    command: ./main N0
+    volumes: 
+      - ../experiment/server0/store:/home/dy/server/store
+      - ../experiment/server0/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server1:
+    container_name: server1
+    image: server:latest
+    working_dir: /home/dy/server
+    command: ./main N1
+    volumes: 
+      - ../experiment/server1/store:/home/dy/server/store
+      - ../experiment/server1/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server2:
+    container_name: server2
+    image: server:latest
+    working_dir: /home/dy/server
+    command: ./main N2
+    volumes: 
+      - ../experiment/server2/store:/home/dy/server/store
+      - ../experiment/server2/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+  
+  server3:
+    container_name: server3
+    image: server:latest
+    working_dir: /home/dy/server
+    command: ./main N3
+    volumes: 
+      - ../experiment/server3/store:/home/dy/server/store
+      - ../experiment/server3/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
