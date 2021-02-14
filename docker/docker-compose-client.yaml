@@ -8,10 +8,12 @@ services:
     container_name: client
     image: client:latest
     working_dir: /home/dy/client
-    # command: 
+    # command: /bin/sh
     volumes: 
       - ../experiment/client/log:/home/dy/client/log
     # ports: 
+    stdin_open: true
+    tty: true
     
     networks: 
       - dynet
