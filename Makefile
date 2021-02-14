@@ -21,14 +21,25 @@ cli:
 	go build -o experiment/client/main cmd/client/main.go
 
 start_server_container:
-	cd docker/ &&./container.sh && docker-compose -f docker-compose-servers.yaml up
+	cd docker/ && ./container.sh stopServer 
+	cd docker/ && ./container.sh constructServerImage && docker-compose -f docker-compose-servers.yaml up
 
 start_client_container:
-	# cd docker/ && docker rm client && docker-compose -f docker-compose-client.yaml up
-	docker rm client && docker run --name client --network docker_dynet -it client /bin/sh
+	cd docker/ && ./container.sh stopClient 
+	cd docker/ && ./container.sh constructClientImage
+	cd docker/ && docker-compose -f docker-compose-client.yaml up -d
+	docker exec -it client /bin/sh
 
-stop_container:
-	cd docker/ &&./container.sh
+stop_all:
+	# cd docker/ && ./container.sh stopClient && ./container.sh stopServer
+	cd docker/ && ./container.sh stopClient
+	cd docker/ && ./container.sh stopServer
+
+stop_client:
+	cd docker/ && ./container.sh stopClient
+
+stop_server:
+	cd docker/ && ./container.sh stopServer
 
 add_net_delay:
 	pumba netem -d 1h --tc-image gaiadocker/iproute2 delay --time 40 --jitter 10 --distribution normal re2:server*
