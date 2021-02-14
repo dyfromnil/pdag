@@ -48,7 +48,7 @@ func NewClient(n int) *Client {
 	if err := os.MkdirAll("./log", 0755); err != nil {
 		log.Fatalln("error while creating dir:'./log'")
 	}
-	file, err := os.OpenFile("./log/tps.log", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
+	file, err := os.OpenFile("./log/tps.log", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		log.Fatal("error opening tps log file writer for file tps.log")
 	}
