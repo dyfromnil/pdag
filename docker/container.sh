@@ -23,9 +23,9 @@ elif [ "${MODE}" == "stopServer" ]; then
     docker rmi server:latest
   fi
 elif [ "${MODE}" == "constructClientImage" ]; then
-  cd client && sudo docker build -t client -f Dockerfile ../../experiment/client
+  cd client && docker build -t client -f Dockerfile ../../experiment/client
 elif [ "${MODE}" == "constructServerImage" ]; then
-  cd server && sudo docker build -t server -f Dockerfile ../../experiment/server0
+  cd server && docker build -t server -f Dockerfile ../../experiment/server0
 else
   echo "can not parse param!"
   exit 1

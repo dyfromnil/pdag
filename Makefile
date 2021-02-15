@@ -10,12 +10,12 @@ build:
 	go build -o experiment/server0/main cmd/server/main.go
 	go build -o experiment/genKeys cmd/genKeys/main.go
 
-	cd experiment/ && sudo ./genKeys
-	sudo mv experiment/Keys experiment/server0/
+	cd experiment/ && ./genKeys
+	mv experiment/Keys experiment/server0/
 	
-	sudo cp -r experiment/server0/ experiment/server1/
-	sudo cp -r experiment/server0/ experiment/server2/
-	sudo cp -r experiment/server0/ experiment/server3/
+	cp -r experiment/server0/ experiment/server1/
+	cp -r experiment/server0/ experiment/server2/
+	cp -r experiment/server0/ experiment/server3/
 
 cli:
 	go build -o experiment/client/main cmd/client/main.go
@@ -31,7 +31,6 @@ start_client_container:
 	docker exec -it client /bin/sh
 
 stop_all:
-	# cd docker/ && ./container.sh stopClient && ./container.sh stopServer
 	cd docker/ && ./container.sh stopClient
 	cd docker/ && ./container.sh stopServer
 
