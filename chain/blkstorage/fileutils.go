@@ -1,11 +1,12 @@
 package blkstorage
 
 import (
-	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/pkg/errors"
 )
 
 // CreateAndSyncFileAtomically writes the content to the tmpFile, fsyncs the tmpFile,
