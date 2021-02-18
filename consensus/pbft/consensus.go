@@ -25,14 +25,14 @@ type Server struct {
 }
 
 type chain struct {
-	support   consensus.ConsenterSupport
-	sendChan  chan *message
-	exitChan  chan struct{}
-	blockChan chan *cb.Block
+	support  consensus.ConsenterSupport
+	sendChan chan *message
+	exitChan chan struct{}
+	// blockChan chan *cb.Block
 
-	lastEnvWaitingNum int //上一时刻等待被打包的transaction数量
-	lastDiff          int //上次的diff
-	lastPreRef        int //上个区块的前驱引用数
+	lastEnvWaitingNum int     //上一时刻等待被打包的transaction数量
+	lastDiff          float32 //上次的diff
+	lastPreRef        int     //上个区块的前驱引用数
 
 	lock  sync.Mutex
 	cntCh chan bool
@@ -67,7 +67,7 @@ func (pb *Server) Start() {
 
 	lis, err := net.Listen("tcp", pb.ch.support.GetIdendity().GetSelfAddr())
 	if err != nil {
-		log.Fatalf("net.Listen err: %v", err)
+		//log.Fatalf("net.Listen err: %v", err)
 	}
 	go server.Serve(lis)
 	pb.ch.Start()
@@ -78,14 +78,14 @@ func (pb *Server) Start() {
 
 func newChain(support consensus.ConsenterSupport) *chain {
 	return &chain{
-		support:   support,
-		sendChan:  make(chan *message, 20000),
-		exitChan:  make(chan struct{}),
-		blockChan: make(chan *cb.Block, 20),
-		cntCh:     make(chan bool, globleconfig.PbftNumOfGoroutine), //num of pbft goroutines
+		support:  support,
+		sendChan: make(chan *message, 20000),
+		exitChan: make(chan struct{}),
+		// blockChan: make(chan *cb.Block, 20),
+		cntCh: make(chan bool, globleconfig.PbftNumOfGoroutine), //num of pbft goroutines
 
 		lastEnvWaitingNum: 0,
-		lastDiff:          0,
+		lastDiff:          1,
 		lastPreRef:        1,
 
 		blockPool:           make(map[string]*cb.Block),
@@ -97,7 +97,7 @@ func newChain(support consensus.ConsenterSupport) *chain {
 }
 
 func (ch *chain) Start() {
-	go ch.createBlock(0.7)
+	// go ch.createBlock(0.7)
 }
 
 func (ch *chain) Halt() {
@@ -121,7 +121,7 @@ func (ch *chain) Order(env *cb.Envelope) error {
 	}:
 		return nil
 	case <-ch.exitChan:
-		log.Fatal("Exiting")
+		//log.Fatal("Exiting")
 		return nil
 	}
 }
@@ -129,33 +129,6 @@ func (ch *chain) Order(env *cb.Envelope) error {
 // Errored only closes on exit
 func (ch *chain) Errored() <-chan struct{} {
 	return ch.exitChan
-}
-
-func (ch *chain) createBlock(rate float32) {
-	for {
-		msg := <-ch.sendChan
-		batches, _ := ch.support.BlockCutter().Ordered(msg.normalMsg)
-
-		for _, batch := range batches {
-			diff := float32(len(ch.sendChan)-ch.lastEnvWaitingNum)*rate + (1-rate)*float32(ch.lastDiff)
-
-			var refNum int
-			scale := abs(diff / float32(ch.lastDiff))
-			if diff > 0 {
-				refNum = min(int(ch.lastPreRef*int(1+scale)), 10)
-			} else {
-				refNum = max(int(ch.lastPreRef*int(1-scale)), 1)
-			}
-
-			ch.lastPreRef = refNum
-
-			block := ch.support.CreateNextBlock(batch, refNum)
-			ch.blockChan <- block
-
-			ch.lastEnvWaitingNum = len(ch.sendChan)
-			ch.lastDiff = int(diff)
-		}
-	}
 }
 
 func max(a int, b int) int {
@@ -181,29 +154,68 @@ func abs(a float32) float32 {
 
 func (ch *chain) prePrepare() {
 	for {
-		ch.cntCh <- true
-		//获取消息摘要
-		block := <-ch.blockChan
-		digest := blkstorage.BlockHeaderDigest(block.Header)
-		log.Printf("已将block存入临时消息池")
-		//存入临时消息池
-		ch.lock.Lock()
-		ch.blockPool[digest] = block
-		ch.lock.Unlock()
-		//主节点对消息摘要进行签名
-		digestByte, _ := hex.DecodeString(digest)
-		signInfo := ch.support.GetIdendity().RsaSignWithSha256(digestByte, ch.support.GetIdendity().GetSelfPivKey())
-		//拼接成PrePrepare，准备发往follower节点
-		pp := &cb.PrePrepareMsg{
-			Block:  block,
-			Digest: digest,
-			Sign:   signInfo,
-		}
+		msg := <-ch.sendChan
+		batches, _ := ch.support.BlockCutter().Ordered(msg.normalMsg)
 
-		log.Printf("正在向其他节点进行进行PrePrepare广播 ...")
-		//进行PrePrepare广播
-		ch.broadcastPrePrepare(pp)
-		log.Printf("PrePrepare广播完成")
+		for _, batch := range batches {
+			ch.cntCh <- true
+			tmp := len(ch.sendChan)
+			diff := float32(tmp-ch.lastEnvWaitingNum)*globleconfig.Rate + (1-globleconfig.Rate)*float32(ch.lastDiff)
+
+			var refNum int
+			scale := abs(diff / ch.lastDiff)
+
+			if diff >= 0 {
+				if ch.lastDiff >= 0 {
+					refNum = int(float32(ch.lastPreRef) / scale)
+				} else {
+					refNum = int(float32(ch.lastPreRef) * 0.7)
+				}
+				refNum = max(refNum, 1)
+				refNum = min(refNum, globleconfig.PostReference)
+			} else {
+				if ch.lastDiff <= 0 {
+					refNum = int(float32(ch.lastPreRef) * scale)
+				} else {
+					refNum = int(float32(ch.lastPreRef) * 1.7)
+				}
+				refNum = max(refNum, globleconfig.PostReference+1)
+				refNum = min(refNum, 10)
+			}
+
+			ch.lastPreRef = refNum
+
+			log.Println("refNum (k) : ", refNum, " tmp: ", tmp, "lastTmp: ", ch.lastEnvWaitingNum, " diff: ", diff, " lastDiff: ", ch.lastDiff, " scale: ", scale)
+
+			block := ch.support.CreateNextBlock(batch, refNum)
+			// ch.blockChan <- block
+
+			ch.lastEnvWaitingNum = tmp
+			ch.lastDiff = diff
+
+			//获取消息摘要
+			// block := <-ch.blockChan
+			digest := blkstorage.BlockHeaderDigest(block.Header)
+			//log.Printf("已将block存入临时消息池")
+			//存入临时消息池
+			ch.lock.Lock()
+			ch.blockPool[digest] = block
+			ch.lock.Unlock()
+			//主节点对消息摘要进行签名
+			digestByte, _ := hex.DecodeString(digest)
+			signInfo := ch.support.GetIdendity().RsaSignWithSha256(digestByte, ch.support.GetIdendity().GetSelfPivKey())
+			//拼接成PrePrepare，准备发往follower节点
+			pp := &cb.PrePrepareMsg{
+				Block:  block,
+				Digest: digest,
+				Sign:   signInfo,
+			}
+
+			//log.Printf("正在向其他节点进行进行PrePrepare广播 ...")
+			//进行PrePrepare广播
+			ch.broadcastPrePrepare(pp)
+			//log.Printf("PrePrepare广播完成")
+		}
 	}
 }
 
@@ -215,7 +227,7 @@ func (ch *chain) broadcastPrePrepare(pp *cb.PrePrepareMsg) {
 		go func(i string) {
 			conn, err := grpc.Dial(i, grpc.WithInsecure())
 			if err != nil {
-				log.Fatalf("grpc.Dial err: %v", err)
+				//log.Fatalf("grpc.Dial err: %v", err)
 			}
 			defer conn.Close()
 
@@ -223,9 +235,9 @@ func (ch *chain) broadcastPrePrepare(pp *cb.PrePrepareMsg) {
 			_, err = client.HandlePrePrepare(context.Background(), pp)
 			// resp, err := client.HandlePrePrepare(context.Background(), pp)
 			if err != nil {
-				log.Fatalf("client.Search err: %v", err)
+				//log.Fatalf("client.Search err: %v", err)
 			}
-			// log.Printf("resp: %t", resp.GetResCode())
+			// //log.Printf("resp: %t", resp.GetResCode())
 		}(i)
 	}
 }
@@ -238,16 +250,16 @@ func (ch *chain) broadcastPrepare(p *cb.PrepareMsg) {
 		go func(i string) {
 			conn, err := grpc.Dial(i, grpc.WithInsecure())
 			if err != nil {
-				log.Fatalf("grpc.Dial err: %v", err)
+				//log.Fatalf("grpc.Dial err: %v", err)
 			}
 			defer conn.Close()
 
 			client := cb.NewPbftClient(conn)
 			_, err = client.HandlePrepare(context.Background(), p)
 			if err != nil {
-				log.Fatalf("client.Search err: %v", err)
+				//log.Fatalf("client.Search err: %v", err)
 			}
-			// log.Printf("resp: %t", resp.GetResCode())
+			// //log.Printf("resp: %t", resp.GetResCode())
 		}(i)
 	}
 }
@@ -260,16 +272,16 @@ func (ch *chain) broadcastCommit(c *cb.CommitMsg) {
 		go func(i string) {
 			conn, err := grpc.Dial(i, grpc.WithInsecure())
 			if err != nil {
-				log.Fatalf("grpc.Dial err: %v", err)
+				//log.Fatalf("grpc.Dial err: %v", err)
 			}
 			defer conn.Close()
 
 			client := cb.NewPbftClient(conn)
 			_, err = client.HandleCommit(context.Background(), c)
 			if err != nil {
-				log.Fatalf("client.Search err: %v", err)
+				//log.Fatalf("client.Search err: %v", err)
 			}
-			// log.Printf("resp: %t", resp.GetResCode())
+			// //log.Printf("resp: %t", resp.GetResCode())
 		}(i)
 	}
 }
@@ -294,27 +306,27 @@ func (ch *chain) setCommitConfirmMap(val, val2 string, b bool) {
 func (pb *Server) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*cb.Response, error) {
 	pb.ch.lock.Lock()
 	defer pb.ch.lock.Unlock()
-	log.Printf("本节点已接收到主节点发来的PrePrepare ...")
+	//log.Printf("本节点已接收到主节点发来的PrePrepare ...")
 
 	if !pb.ch.support.VerifyCurrentBlock(pp.Block) {
-		log.Fatalln("该block与本地账本存在冲突！！！")
+		//log.Fatalln("该block与本地账本存在冲突！！！")
 	}
 
 	//获取主节点的公钥，用于数字签名验证
 	primaryNodePubKey := pb.ch.support.GetIdendity().GetPubKey(globleconfig.LeaderNodeID)
 	digestByte, _ := hex.DecodeString(pp.Digest)
 	if digest := blkstorage.BlockHeaderDigest(pp.Block.Header); digest != pp.Digest {
-		log.Fatalln("信息摘要对不上，拒绝进行prepare广播")
+		//log.Fatalln("信息摘要对不上，拒绝进行prepare广播")
 		return &cb.Response{ResCode: false}, errors.New("HandlePrePrepare digest error")
 	} else if !pb.ch.support.GetIdendity().RsaVerySignWithSha256(digestByte, pp.Sign, primaryNodePubKey) {
-		log.Printf("主节点签名验证失败！,拒绝进行prepare广播")
+		//log.Printf("主节点签名验证失败！,拒绝进行prepare广播")
 		return &cb.Response{ResCode: false}, errors.New("HandlePrePrepare VerySign error")
 	} else {
 		//将信息存入临时消息池
-		log.Printf("已将消息存入临时节点池")
+		//log.Printf("已将消息存入临时节点池")
 		// pb.ch.lock.Lock()
 		pb.ch.blockPool[pp.Digest] = pp.Block
-		log.Println("Pool add digest:", digest)
+		//log.Println("Pool add digest:", digest)
 
 		// pb.ch.lock.Unlock()
 		//节点使用私钥对其签名
@@ -327,13 +339,13 @@ func (pb *Server) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*
 		}
 
 		//进行准备阶段的广播
-		log.Printf("正在进行Prepare广播 ...")
+		//log.Printf("正在进行Prepare广播 ...")
 		pb.ch.broadcastPrepare(pre)
-		log.Printf("Prepare广播完成")
+		//log.Printf("Prepare广播完成")
 
 		// 接收到Preprepare后发现早已收到足够多后一阶段prepare消息，^_^!节点间延迟太高啦！ @_@几个阶段杂揉了，有时间再改!_!
 		if pb.canPrepared(digest) {
-			log.Println("本节点已收到至少2f个节点(包括本地节点)发来的Prepare信息 ...")
+			//log.Println("本节点已收到至少2f个节点(包括本地节点)发来的Prepare信息 ...")
 			//节点使用私钥对其签名
 			sign := pb.ch.support.GetIdendity().RsaSignWithSha256(digestByte, pb.ch.support.GetIdendity().GetSelfPivKey())
 			c := &cb.CommitMsg{
@@ -343,21 +355,21 @@ func (pb *Server) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*
 			}
 
 			//进行提交信息的广播
-			log.Println("正在进行commit广播", digest)
+			//log.Println("正在进行commit广播", digest)
 			pb.ch.broadcastCommit(c)
 			pb.ch.isCommitBordcast[digest] = true
-			log.Printf("commit广播完成")
+			//log.Printf("commit广播完成")
 
 			if pb.canCommit(digest) {
-				log.Printf("本节点已收到至少2f + 1 个节点(包括本地节点)发来的Commit信息 ...")
+				//log.Printf("本节点已收到至少2f + 1 个节点(包括本地节点)发来的Commit信息 ...")
 				//将消息信息，提交到本地消息池中！
 				pb.ch.support.Append(pb.ch.blockPool[c.Digest])
 				if pb.ch.support.GetIdendity().GetNodeID() == globleconfig.LeaderNodeID {
 					<-pb.ch.cntCh
 				}
-				log.Println("Delete digest from pool: ", c.Digest)
-				log.Println(pb.ch.support.GetIdendity().GetNodeID() + "节点已将当前block存入本地账本中")
-				log.Printf("正在reply客户端 ...")
+				//log.Println("Delete digest from pool: ", c.Digest)
+				//log.Println(pb.ch.support.GetIdendity().GetNodeID() + "节点已将当前block存入本地账本中")
+				//log.Printf("正在reply客户端 ...")
 				reply := client.Msg{
 					Digest:     c.Digest,
 					NumOfTranc: len(pb.ch.blockPool[c.Digest].Data.Data),
@@ -365,11 +377,11 @@ func (pb *Server) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*
 				}
 				replyBytes, err := json.Marshal(reply)
 				if err != nil {
-					log.Fatal("Marshal Error!")
+					//log.Fatal("Marshal Error!")
 				}
 				tcpDial(replyBytes, globleconfig.ClientAddr)
 				pb.ch.isReply[c.Digest] = true
-				log.Printf("reply完毕")
+				//log.Printf("reply完毕")
 			}
 		}
 	}
@@ -380,7 +392,7 @@ func (pb *Server) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*
 func (pb *Server) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.Response, error) {
 	pb.ch.lock.Lock()
 	defer pb.ch.lock.Unlock()
-	log.Printf("本节点已接收到%s节点发来的Prepare ...", p.NodeID)
+	//log.Printf("本节点已接收到%s节点发来的Prepare ...", p.NodeID)
 	//获取消息源节点的公钥，用于数字签名验证
 	MessageNodePubKey := pb.ch.support.GetIdendity().GetPubKey(p.NodeID)
 	digestByte, _ := hex.DecodeString(p.Digest)
@@ -388,11 +400,11 @@ func (pb *Server) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.Resp
 	_, ok := pb.ch.blockPool[p.Digest]
 	// pb.ch.lock.Unlock()
 	if !ok {
-		log.Println("当前临时消息池无此摘要，等待Preprepare消息&暂存当前Prepare消息至prepare池")
+		//log.Println("当前临时消息池无此摘要，等待Preprepare消息&暂存当前Prepare消息至prepare池")
 		pb.ch.setPrePareConfirmMap(p.Digest, p.NodeID, true)
 		return &cb.Response{ResCode: false}, nil
 	} else if !pb.ch.support.GetIdendity().RsaVerySignWithSha256(digestByte, p.Sign, MessageNodePubKey) {
-		log.Printf("节点签名验证失败！,拒绝执行commit广播")
+		//log.Printf("节点签名验证失败！,拒绝执行commit广播")
 		return &cb.Response{ResCode: false}, errors.New("HandlePrepare VerySign error")
 	} else {
 		// pb.ch.lock.Lock()
@@ -401,7 +413,7 @@ func (pb *Server) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.Resp
 		// pb.ch.lock.Lock()
 		//获取消息源节点的公钥，用于数字签名验证
 		if pb.canPrepared(p.Digest) {
-			log.Println("本节点已收到至少2f个节点(包括本地节点)发来的Prepare信息 ...", p.Digest)
+			//log.Println("本节点已收到至少2f个节点(包括本地节点)发来的Prepare信息 ...", p.Digest)
 			//节点使用私钥对其签名
 			sign := pb.ch.support.GetIdendity().RsaSignWithSha256(digestByte, pb.ch.support.GetIdendity().GetSelfPivKey())
 			c := &cb.CommitMsg{
@@ -411,22 +423,22 @@ func (pb *Server) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.Resp
 			}
 
 			//进行提交信息的广播
-			log.Println("正在进行commit广播", p.Digest)
+			//log.Println("正在进行commit广播", p.Digest)
 			pb.ch.broadcastCommit(c)
 			pb.ch.isCommitBordcast[p.Digest] = true
-			log.Printf("commit广播完成")
+			//log.Printf("commit广播完成")
 
 			// 接收到prepare后发现早已收到足够多后一阶段commit消息，^_^!节点间延迟太高啦！ @_@几个阶段杂揉了，有时间再改!_!
 			if pb.canCommit(p.Digest) {
-				log.Printf("本节点已收到至少2f + 1 个节点(包括本地节点)发来的Commit信息 ...")
+				//log.Printf("本节点已收到至少2f + 1 个节点(包括本地节点)发来的Commit信息 ...")
 				//将消息信息，提交到本地消息池中！
 				pb.ch.support.Append(pb.ch.blockPool[p.Digest])
 				if pb.ch.support.GetIdendity().GetNodeID() == globleconfig.LeaderNodeID {
 					<-pb.ch.cntCh
 				}
-				log.Println("Delete digest from pool: ", p.Digest)
-				log.Println(pb.ch.support.GetIdendity().GetNodeID() + "节点已将当前block存入本地账本中")
-				log.Printf("正在reply客户端 ...")
+				//log.Println("Delete digest from pool: ", p.Digest)
+				//log.Println(pb.ch.support.GetIdendity().GetNodeID() + "节点已将当前block存入本地账本中")
+				//log.Printf("正在reply客户端 ...")
 				reply := client.Msg{
 					Digest:     c.Digest,
 					NumOfTranc: len(pb.ch.blockPool[c.Digest].Data.Data),
@@ -434,11 +446,11 @@ func (pb *Server) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.Resp
 				}
 				replyBytes, err := json.Marshal(reply)
 				if err != nil {
-					log.Fatal("Marshal Error!")
+					//log.Fatal("Marshal Error!")
 				}
 				tcpDial(replyBytes, globleconfig.ClientAddr)
 				pb.ch.isReply[p.Digest] = true
-				log.Printf("reply完毕")
+				//log.Printf("reply完毕")
 			}
 		}
 		// pb.ch.lock.Unlock()
@@ -464,7 +476,7 @@ func (pb *Server) canPrepared(digest string) bool {
 func (pb *Server) HandleCommit(ctx context.Context, c *cb.CommitMsg) (*cb.Response, error) {
 	pb.ch.lock.Lock()
 	defer pb.ch.lock.Unlock()
-	log.Printf("本节点已接收到%s节点发来的Commit ... ", c.NodeID)
+	//log.Printf("本节点已接收到%s节点发来的Commit ... ", c.NodeID)
 	//获取消息源节点的公钥，用于数字签名验证
 	MessageNodePubKey := pb.ch.support.GetIdendity().GetPubKey(c.NodeID)
 	digestByte, _ := hex.DecodeString(c.Digest)
@@ -473,25 +485,25 @@ func (pb *Server) HandleCommit(ctx context.Context, c *cb.CommitMsg) (*cb.Respon
 	// pb.ch.lock.Unlock()
 	if !ok {
 		pb.ch.setCommitConfirmMap(c.Digest, c.NodeID, true)
-		log.Println("当前prepare池无此摘要，等待prepare消息&暂存当前commit消息至CommitConfirm池")
+		//log.Println("当前prepare池无此摘要，等待prepare消息&暂存当前commit消息至CommitConfirm池")
 		return &cb.Response{ResCode: false}, nil
 	} else if !pb.ch.support.GetIdendity().RsaVerySignWithSha256(digestByte, c.Sign, MessageNodePubKey) {
-		log.Printf("节点签名验证失败！,拒绝将信息持久化到本地消息池")
+		//log.Printf("节点签名验证失败！,拒绝将信息持久化到本地消息池")
 		return &cb.Response{ResCode: false}, errors.New("HandleCommit VerySign error")
 	} else {
 		// pb.ch.lock.Lock()
 		pb.ch.setCommitConfirmMap(c.Digest, c.NodeID, true)
 
 		if pb.canCommit(c.Digest) {
-			log.Printf("本节点已收到至少2f + 1 个节点(包括本地节点)发来的Commit信息 ...")
+			//log.Printf("本节点已收到至少2f + 1 个节点(包括本地节点)发来的Commit信息 ...")
 			//将消息信息，提交到本地消息池中！
 			pb.ch.support.Append(pb.ch.blockPool[c.Digest])
 			if pb.ch.support.GetIdendity().GetNodeID() == globleconfig.LeaderNodeID {
 				<-pb.ch.cntCh
 			}
-			log.Println("Delete digest from pool: ", c.Digest)
-			log.Println(pb.ch.support.GetIdendity().GetNodeID() + "节点已将当前block存入本地账本中")
-			log.Printf("正在reply客户端 ...")
+			//log.Println("Delete digest from pool: ", c.Digest)
+			//log.Println(pb.ch.support.GetIdendity().GetNodeID() + "节点已将当前block存入本地账本中")
+			//log.Printf("正在reply客户端 ...")
 			reply := client.Msg{
 				Digest:     c.Digest,
 				NumOfTranc: len(pb.ch.blockPool[c.Digest].Data.Data),
@@ -499,11 +511,11 @@ func (pb *Server) HandleCommit(ctx context.Context, c *cb.CommitMsg) (*cb.Respon
 			}
 			replyBytes, err := json.Marshal(reply)
 			if err != nil {
-				log.Fatal("Marshal Error!")
+				//log.Fatal("Marshal Error!")
 			}
 			tcpDial(replyBytes, globleconfig.ClientAddr)
 			pb.ch.isReply[c.Digest] = true
-			log.Printf("reply完毕")
+			//log.Printf("reply完毕")
 		}
 		// pb.ch.lock.Unlock()
 	}
@@ -521,13 +533,13 @@ func (pb *Server) canCommit(digest string) bool {
 func tcpDial(context []byte, addr string) {
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
-		log.Println("connect error", err)
+		//log.Println("connect error", err)
 		return
 	}
 
 	_, err = conn.Write(context)
 	if err != nil {
-		log.Fatal(err)
+		//log.Fatal(err)
 	}
 	conn.Close()
 }
