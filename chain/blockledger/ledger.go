@@ -1,6 +1,7 @@
 package blockledger
 
 import (
+	"log"
 	"sync"
 	"time"
 
@@ -22,6 +23,8 @@ type ReadWriter interface {
 type Ledger struct {
 	blockStore      blkstorage.BlockStore
 	round           int64                    //轮次
+	roundBlockNums  map[int64]int            //每轮的区块总数
+	roundPreRefNums map[int64]int            //每轮剩余的总后继引用数
 	roundDigestPost map[int64]map[string]int //第几轮哪个区块的目前的后继区块数
 	preBlocksDigest map[string][]string      //当前区块的前驱区块digest,所有的string均为区块的digest
 	digestToHash    map[string][]byte        //digest对应的hash值
@@ -34,6 +37,8 @@ func NewLedger(blockStore blkstorage.BlockStore) *Ledger {
 	fl := &Ledger{
 		blockStore:      blockStore,
 		round:           1,
+		roundPreRefNums: make(map[int64]int),
+		roundBlockNums:  make(map[int64]int),
 		roundDigestPost: make(map[int64]map[string]int),
 		preBlocksDigest: make(map[string][]string),
 		digestToHash:    make(map[string][]byte),
@@ -43,6 +48,9 @@ func NewLedger(blockStore blkstorage.BlockStore) *Ledger {
 	defer fl.lock.Unlock()
 	fl.blockStore.AddBlock(gensisBlock)
 	digest := blkstorage.BlockHeaderDigest(gensisBlock.Header)
+	log.Println("gensis digest: ", digest)
+	fl.roundBlockNums[fl.round-1] = 1
+	fl.roundPreRefNums[fl.round-1] = globleconfig.PostReference
 	fl.setRoundDigestPost(0, digest, globleconfig.PostReference)
 	fl.digestToHash[digest] = blkstorage.BlockHeaderHash(gensisBlock.Header)
 	return fl
@@ -79,6 +87,7 @@ func (fl *Ledger) CreateNextBlock(messages []*cb.Envelope, preRefNum int) *cb.Bl
 	defer fl.lock.Unlock()
 
 	preDigest, isFull := fl.choosePreBlocksDigestAndIsFull(preRefNum)
+
 	previousHash := [][]byte{}
 	for _, digest := range preDigest {
 		previousHash = append(previousHash, fl.digestToHash[digest])
@@ -94,10 +103,14 @@ func (fl *Ledger) CreateNextBlock(messages []*cb.Envelope, preRefNum int) *cb.Bl
 	block := blkstorage.NewBlock(header, blockData)
 
 	digest := blkstorage.BlockHeaderDigest(header)
+	fl.preBlocksDigest[digest] = preDigest
+	fl.roundBlockNums[fl.round]++
+	fl.roundPreRefNums[fl.round] += globleconfig.PostReference
 	fl.setRoundDigestPost(fl.round, digest, globleconfig.PostReference)
 	fl.digestToHash[digest] = blkstorage.BlockHeaderHash(header)
 
 	if isFull {
+		log.Println("round ", fl.round, "'s num of Blocks: ", fl.roundBlockNums[fl.round])
 		fl.round++
 	}
 
@@ -110,34 +123,41 @@ func (fl *Ledger) choosePreBlocksDigestAndIsFull(preRefNum int) ([]string, bool)
 	//从前一层找
 	for digest, num := range fl.roundDigestPost[fl.round-1] {
 		if num > 0 {
+			// log.Println("<<<<<前一层:", fl.round-1, ">>>>> ", fl.roundDigestPost, "roundBlockNums: ", fl.roundBlockNums[fl.round-1], "this roundBlockNums: ", fl.roundBlockNums[fl.round], "前一层剩余引用数: ", fl.roundPreRefNums[fl.round-1])
 			dgts = append(dgts, digest)
 			fl.roundDigestPost[fl.round-1][digest]--
+			fl.roundPreRefNums[fl.round-1]--
 			preRefNum--
 		}
+		// log.Println("<<<<<前一层:", fl.round-1, ">>>>> ", fl.roundDigestPost, "roundBlockNums: ", fl.roundBlockNums[fl.round-1], "前一层剩余引用数: ", fl.roundPreRefNums[fl.round-1])
+
 		if preRefNum == 0 {
 			break
 		}
 	}
 	isFull := false
 
-	//若前一层的所有后继均满，则从更前层寻找（更前层可能有共识失败后返还的后继索引计数）
-	if preRefNum > 0 {
+	if fl.roundPreRefNums[fl.round-1] == 0 {
 		isFull = true
-		for rd := range fl.roundDigestPost {
-			if rd != fl.round-1 {
-				for digest, num := range fl.roundDigestPost[fl.round-1] {
-					if num > 0 {
-						dgts = append(dgts, digest)
-						fl.roundDigestPost[fl.round-1][digest]--
-						preRefNum--
-					}
-					if preRefNum == 0 {
-						break
-					}
-				}
-			}
-		}
 	}
+
+	//若前一层的所有后继均满，且当前区块的前驱引用数未达到最大，则从更前层寻找（更前层可能有共识失败后返还的后继索引计数）
+	// if preRefNum > 0 {
+	// 	for rd := range fl.roundDigestPost {
+	// 		if rd != fl.round-1 {
+	// 			for digest, num := range fl.roundDigestPost[rd] {
+	// 				if num > 0 {
+	// 					dgts = append(dgts, digest)
+	// 					fl.roundDigestPost[rd][digest]--
+	// 					preRefNum--
+	// 				}
+	// 				if preRefNum == 0 {
+	// 					break
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
 	return dgts, isFull
 }
 
@@ -155,13 +175,18 @@ func (fl *Ledger) setRoundDigestPost(val int64, val2 string, b int) {
 }
 
 func (fl *Ledger) garbageCollect(digest string) {
-	delete(fl.digestToHash, digest)
-	delete(fl.preBlocksDigest, digest)
 	for rd := range fl.roundDigestPost {
-		if _, ok := fl.roundDigestPost[rd][digest]; ok {
-			delete(fl.roundDigestPost[rd], digest)
-			if len(fl.roundDigestPost) == 0 {
-				delete(fl.roundDigestPost, rd)
+		if rd == fl.round {
+			continue
+		}
+		if nums, ok := fl.roundDigestPost[rd][digest]; ok {
+			if nums == 0 {
+				delete(fl.digestToHash, digest)
+				delete(fl.preBlocksDigest, digest)
+				delete(fl.roundDigestPost[rd], digest)
+				if len(fl.roundDigestPost[rd]) == 0 {
+					delete(fl.roundDigestPost, rd)
+				}
 			}
 		}
 	}
