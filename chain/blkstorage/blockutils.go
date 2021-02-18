@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"time"
 
 	"github.com/golang/protobuf/proto"
 
@@ -14,8 +13,8 @@ import (
 
 //GensisBlock for
 func GensisBlock() *cb.Block {
-	time := time.Now()
-	gensis := fmt.Sprintln("This is gensis block, created ", time)
+	// time := time.Now()
+	gensis := fmt.Sprintln("This is gensis block, created by drfromnil")
 	gensisHash := sha256.Sum256([]byte(gensis))
 	selfHash := [][]byte{}
 	selfHash = append(selfHash, gensisHash[:])
@@ -24,7 +23,8 @@ func GensisBlock() *cb.Block {
 		PreviousHash: selfHash,
 		DataHash:     gensisHash[:],
 		Round:        0,
-		Timestamp:    time.UnixNano(),
+		Timestamp:    0,
+		// Timestamp:    time.UnixNano(),
 	}
 	gensisBlock := &cb.Block{
 		Header: header,
