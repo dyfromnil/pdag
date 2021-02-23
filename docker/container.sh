@@ -26,6 +26,9 @@ elif [ "${MODE}" == "constructClientImage" ]; then
   cd client && docker build -t client -f Dockerfile ../../experiment/client
 elif [ "${MODE}" == "constructServerImage" ]; then
   cd server && docker build -t server -f Dockerfile ../../experiment/server0
+elif [ "${MODE}" == "constructBaseImage" ]; then
+  docker rmi base:latest
+  cd base && docker build -t base -f Dockerfile .
 else
   echo "can not parse param!"
   exit 1

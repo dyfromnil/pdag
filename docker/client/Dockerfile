@@ -1,5 +1,2 @@
-FROM alpine
-RUN apk update \
-    && apk add iputils \
-    && apk add iperf
+FROM base
 COPY ./main /home/dy/client/
