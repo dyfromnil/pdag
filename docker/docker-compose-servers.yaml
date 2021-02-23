@@ -7,8 +7,15 @@ services:
   server0:
     container_name: server0
     image: server:latest
+    privileged: true
     working_dir: /home/dy/server
     command: ./main N0
+      # - /bin/sh
+      # - -c
+      # - |
+      #   cd /home/dy/server
+      #   tc qdisc add dev eth0 root netem rate $RATE
+      #   ./main N0
     volumes: 
       - ../experiment/server0/store:/home/dy/server/store
       - ../experiment/server0/Keys:/home/dy/server/Keys
@@ -20,8 +27,15 @@ services:
   server1:
     container_name: server1
     image: server:latest
+    privileged: true
     working_dir: /home/dy/server
-    command: ./main N1
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER rate $RATE
+        ./main N1
     volumes: 
       - ../experiment/server1/store:/home/dy/server/store
       - ../experiment/server1/Keys:/home/dy/server/Keys
@@ -33,8 +47,15 @@ services:
   server2:
     container_name: server2
     image: server:latest
+    privileged: true
     working_dir: /home/dy/server
-    command: ./main N2
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER rate $RATE
+        ./main N2
     volumes: 
       - ../experiment/server2/store:/home/dy/server/store
       - ../experiment/server2/Keys:/home/dy/server/Keys
@@ -46,8 +67,15 @@ services:
   server3:
     container_name: server3
     image: server:latest
+    privileged: true
     working_dir: /home/dy/server
-    command: ./main N3
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER rate $RATE
+        ./main N3
     volumes: 
       - ../experiment/server3/store:/home/dy/server/store
       - ../experiment/server3/Keys:/home/dy/server/Keys
