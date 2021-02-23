@@ -22,7 +22,7 @@ cli:
 
 start_server_container:
 	cd docker/ && ./container.sh stopServer 
-	cd docker/ && ./container.sh constructServerImage && docker-compose -f docker-compose-servers.yaml up
+	cd docker/ && ./container.sh constructServerImage && DELAY=40ms JITTER=10ms RATE=1mbit docker-compose -f docker-compose-servers.yaml up
 
 start_client_container:
 	cd docker/ && ./container.sh stopClient 
@@ -40,5 +40,13 @@ stop_client:
 stop_server:
 	cd docker/ && ./container.sh stopServer
 
+base_image:
+	cd docker/ && ./container.sh constructBaseImage
+
 add_net_delay:
-	pumba netem -d 1h --tc-image gaiadocker/iproute2 delay --time 40 --jitter 10 --distribution normal re2:server*
+	# pumba netem -d 10m --tc-image gaiadocker/iproute2 rate --rate 100kbit re2:server*
+	# pumba netem -d 10m --tc-image gaiadocker/iproute2 delay --time 40 --jitter 10 --distribution normal rate --rate 100kbit re2:server*
+	# pumba netem -d 10m --tc-image gaiadocker/iproute2 delay --time 40 --jitter 10 --distribution normal re2:server*
+	# pumba netem -d 10m --tc-image gaiadocker/iproute2 delay --time 40 --jitter 10 --distribution normal server1 server2 server3
+	# pumba netem -d 10m --tc-image gaiadocker/iproute2 delay --time 40 --jitter 10 --distribution normal re2:server*
+	pumba netem -d 1h --tc-image gaiadocker/iproute2 delay --time 40 --jitter 10 --distribution normal rate --rate 100kbit server0 server1 server2 server3
