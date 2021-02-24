@@ -5,9 +5,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net"
+	"os"
 	"sync"
+	"time"
 
 	"github.com/dyfromnil/pdag/chain/blkstorage"
 	"github.com/dyfromnil/pdag/client"
@@ -36,6 +39,11 @@ type chain struct {
 
 	lock  sync.Mutex
 	cntCh chan bool
+
+	createTime           map[string]int64 //区块创建时间
+	numsOfCommitedBlocks int              //已commit的区块数量
+	totalDelay           int64            //已commit的区块的总确认延迟
+	file                 *os.File         //记录区块确认延迟
 
 	blockPool           map[string]*cb.Block       //临时消息池，消息摘要对应消息本体
 	prePareConfirmCount map[string]map[string]bool //存放收到的prepare数量(至少需要收到并确认2f个)，根据摘要来对应
@@ -77,6 +85,14 @@ func (pb *Server) Start() {
 }
 
 func newChain(support consensus.ConsenterSupport) *chain {
+	if err := os.MkdirAll("./log", 0755); err != nil {
+		log.Fatalln("error while creating dir:'./log'")
+	}
+	file, err := os.OpenFile("./log/delay.log", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		log.Fatal("error opening delay log file writer for file delay.log")
+	}
+
 	return &chain{
 		support:  support,
 		sendChan: make(chan *message, 20000),
@@ -88,6 +104,11 @@ func newChain(support consensus.ConsenterSupport) *chain {
 		lastDiff:          1,
 		lastPreRef:        1,
 
+		createTime:           make(map[string]int64),
+		numsOfCommitedBlocks: 0,
+		totalDelay:           0,
+		file:                 file,
+
 		blockPool:           make(map[string]*cb.Block),
 		prePareConfirmCount: make(map[string]map[string]bool),
 		commitConfirmCount:  make(map[string]map[string]bool),
@@ -98,6 +119,15 @@ func newChain(support consensus.ConsenterSupport) *chain {
 
 func (ch *chain) Start() {
 	// go ch.createBlock(0.7)
+	go ch.statDelay()
+}
+
+func (ch *chain) statDelay() {
+	ticker := time.NewTicker(time.Duration(time.Second * 5))
+	for {
+		<-ticker.C
+		ch.file.WriteString(fmt.Sprintln("numsOfCommitedBlocks: ", ch.numsOfCommitedBlocks, "totalDelay: ", float64(ch.totalDelay)/1e6))
+	}
 }
 
 func (ch *chain) Halt() {
@@ -185,7 +215,7 @@ func (ch *chain) prePrepare() {
 
 			ch.lastPreRef = refNum
 
-			log.Println("refNum (k) : ", refNum, " tmp: ", tmp, "lastTmp: ", ch.lastEnvWaitingNum, " diff: ", diff, " lastDiff: ", ch.lastDiff, " scale: ", scale)
+			// log.Println("refNum (k) : ", refNum, " tmp: ", tmp, "lastTmp: ", ch.lastEnvWaitingNum, " diff: ", diff, " lastDiff: ", ch.lastDiff, " scale: ", scale)
 
 			block := ch.support.CreateNextBlock(batch, refNum)
 			// ch.blockChan <- block
@@ -200,6 +230,7 @@ func (ch *chain) prePrepare() {
 			//存入临时消息池
 			ch.lock.Lock()
 			ch.blockPool[digest] = block
+			ch.createTime[digest] = time.Now().UnixNano()
 			ch.lock.Unlock()
 			//主节点对消息摘要进行签名
 			digestByte, _ := hex.DecodeString(digest)
@@ -364,6 +395,8 @@ func (pb *Server) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*
 				//log.Printf("本节点已收到至少2f + 1 个节点(包括本地节点)发来的Commit信息 ...")
 				//将消息信息，提交到本地消息池中！
 				pb.ch.support.Append(pb.ch.blockPool[c.Digest])
+				pb.ch.numsOfCommitedBlocks++
+				pb.ch.totalDelay += time.Now().UnixNano() - pb.ch.createTime[c.Digest]
 				if pb.ch.support.GetIdendity().GetNodeID() == globleconfig.LeaderNodeID {
 					<-pb.ch.cntCh
 				}
@@ -433,6 +466,8 @@ func (pb *Server) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.Resp
 				//log.Printf("本节点已收到至少2f + 1 个节点(包括本地节点)发来的Commit信息 ...")
 				//将消息信息，提交到本地消息池中！
 				pb.ch.support.Append(pb.ch.blockPool[p.Digest])
+				pb.ch.numsOfCommitedBlocks++
+				pb.ch.totalDelay += time.Now().UnixNano() - pb.ch.createTime[c.Digest]
 				if pb.ch.support.GetIdendity().GetNodeID() == globleconfig.LeaderNodeID {
 					<-pb.ch.cntCh
 				}
@@ -498,6 +533,8 @@ func (pb *Server) HandleCommit(ctx context.Context, c *cb.CommitMsg) (*cb.Respon
 			//log.Printf("本节点已收到至少2f + 1 个节点(包括本地节点)发来的Commit信息 ...")
 			//将消息信息，提交到本地消息池中！
 			pb.ch.support.Append(pb.ch.blockPool[c.Digest])
+			pb.ch.numsOfCommitedBlocks++
+			pb.ch.totalDelay += time.Now().UnixNano() - pb.ch.createTime[c.Digest]
 			if pb.ch.support.GetIdendity().GetNodeID() == globleconfig.LeaderNodeID {
 				<-pb.ch.cntCh
 			}
