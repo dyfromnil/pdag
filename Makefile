@@ -16,13 +16,23 @@ build:
 	cp -r experiment/server0/ experiment/server1/
 	cp -r experiment/server0/ experiment/server2/
 	cp -r experiment/server0/ experiment/server3/
+	# cp -r experiment/server0/ experiment/server4/
+	# cp -r experiment/server0/ experiment/server5/
+	# cp -r experiment/server0/ experiment/server6/
+	# cp -r experiment/server0/ experiment/server7/
+	# cp -r experiment/server0/ experiment/server8/
+	# cp -r experiment/server0/ experiment/server9/
 
 cli:
 	go build -o experiment/client/main cmd/client/main.go
 
+export DELAY=40ms
+export JITTER=10ms
+# export RATE=2mbit
 start_server_container:
 	cd docker/ && ./container.sh stopServer 
-	cd docker/ && ./container.sh constructServerImage && DELAY=40ms JITTER=10ms RATE=1mbit docker-compose -f docker-compose-servers.yaml up
+	cd docker/ && ./container.sh constructServerImage && DELAY=$(DELAY) JITTER=$(JITTER) RATE=$(RATE) docker-compose -f docker-compose-servers.yaml up
+	# iftop -nN -i eth0
 
 start_client_container:
 	cd docker/ && ./container.sh stopClient 

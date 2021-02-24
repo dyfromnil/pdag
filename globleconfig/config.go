@@ -13,6 +13,9 @@ const (
 	//PbftNumOfGoroutine for
 	PbftNumOfGoroutine = 1
 
+	//Rate for
+	Rate = 0.7
+
 	//BlockStorageDir is
 	BlockStorageDir = "./"
 	// ChainsDir is the name of the directory containing the channel ledgers.
@@ -36,4 +39,10 @@ var NodeTable = map[string]string{
 	"N1": "server1:8601",
 	"N2": "server2:8602",
 	"N3": "server3:8603",
+	// "N4": "server4:8604",
+	// "N5": "server5:8605",
+	// "N6": "server6:8606",
+	// "N7": "server7:8607",
+	// "N8": "server8:8608",
+	// "N9": "server9:8609",
 }
