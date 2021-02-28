@@ -193,23 +193,20 @@ func (ch *chain) prePrepare() {
 			diff := float32(tmp-ch.lastEnvWaitingNum)*globleconfig.Rate + (1-globleconfig.Rate)*float32(ch.lastDiff)
 
 			var refNum int
-			scale := abs(diff / ch.lastDiff)
+			var scale float32
+			if diff*ch.lastDiff > 0 {
+				scale = abs(diff / ch.lastDiff)
+			} else {
+				scale = abs((diff - ch.lastDiff) / ch.lastDiff)
+			}
 
 			if diff >= 0 {
-				if ch.lastDiff >= 0 {
-					refNum = int(float32(ch.lastPreRef) / scale)
-				} else {
-					refNum = int(float32(ch.lastPreRef) * 0.7)
-				}
+				refNum = int(float32(ch.lastPreRef) / scale)
 				refNum = max(refNum, 1)
 				refNum = min(refNum, globleconfig.PostReference)
 			} else {
-				if ch.lastDiff <= 0 {
-					refNum = int(float32(ch.lastPreRef) * scale)
-				} else {
-					refNum = int(float32(ch.lastPreRef) * 1.7)
-				}
-				refNum = max(refNum, globleconfig.PostReference+1)
+				refNum = int(float32(ch.lastPreRef) * scale)
+				refNum = max(refNum, globleconfig.PostReference)
 				refNum = min(refNum, 10)
 			}
 
