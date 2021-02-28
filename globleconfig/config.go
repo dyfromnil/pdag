@@ -1,6 +1,9 @@
 package globleconfig
 
 const (
+	//NumOfClient for
+	NumOfClient = 1
+
 	//PreferredMaxBytes is
 	PreferredMaxBytes = 1024 * 1024 * 3
 	//MaxMessageCount is
