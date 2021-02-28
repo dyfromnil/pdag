@@ -14,20 +14,21 @@ import (
 
 // ReadWriter encapsulates the read/write functions of the ledger
 type ReadWriter interface {
-	CreateNextBlock(messages []*cb.Envelope, preRefNum int) *cb.Block
+	CreateNextBlock(messages []*cb.Envelope, preRefNum int) (*cb.Block, *LedgerInfo)
 	Append(block *cb.Block) error
 	VerifyCurrentBlock(*cb.Block) bool
 }
 
 // Ledger is a struct used to interact with a node's ledger
 type Ledger struct {
-	blockStore      blkstorage.BlockStore
-	round           int64                    //轮次
-	roundBlockNums  map[int64]int            //每轮的区块总数
-	roundPreRefNums map[int64]int            //每轮剩余的总后继引用数
-	roundDigestPost map[int64]map[string]int //第几轮哪个区块的目前的后继区块数
-	preBlocksDigest map[string][]string      //当前区块的前驱区块digest,所有的string均为区块的digest
-	digestToHash    map[string][]byte        //digest对应的hash值
+	blockStore           blkstorage.BlockStore
+	round                int64                    //轮次
+	roundTransactionNums int64                    //当前层打包交易总数
+	roundBlockNums       map[int64]int            //每轮的区块总数
+	roundPreRefNums      map[int64]int            //每轮剩余的总后继引用数
+	roundDigestPost      map[int64]map[string]int //第几轮哪个区块的目前的后继区块数
+	preBlocksDigest      map[string][]string      //当前区块的前驱区块digest,所有的string均为区块的digest
+	digestToHash         map[string][]byte        //digest对应的hash值
 
 	lock sync.Mutex
 }
@@ -35,13 +36,14 @@ type Ledger struct {
 // NewLedger creates a new Ledger for interaction with the ledger
 func NewLedger(blockStore blkstorage.BlockStore) *Ledger {
 	fl := &Ledger{
-		blockStore:      blockStore,
-		round:           1,
-		roundPreRefNums: make(map[int64]int),
-		roundBlockNums:  make(map[int64]int),
-		roundDigestPost: make(map[int64]map[string]int),
-		preBlocksDigest: make(map[string][]string),
-		digestToHash:    make(map[string][]byte),
+		blockStore:           blockStore,
+		round:                1,
+		roundTransactionNums: 0,
+		roundPreRefNums:      make(map[int64]int),
+		roundBlockNums:       make(map[int64]int),
+		roundDigestPost:      make(map[int64]map[string]int),
+		preBlocksDigest:      make(map[string][]string),
+		digestToHash:         make(map[string][]byte),
 	}
 	gensisBlock := blkstorage.GensisBlock()
 	fl.lock.Lock()
@@ -72,8 +74,16 @@ func (fl *Ledger) Append(block *cb.Block) error {
 	return nil
 }
 
+//LedgerInfo for
+type LedgerInfo struct {
+	IsFull               bool  //当前层是否满
+	Round                int64 // 当前层层数
+	RoundBlockNums       int   //当前层区块数量
+	RoundTransactionNums int64 //当前层打包交易总数
+}
+
 // CreateNextBlock provides a utility way to construct the next block
-func (fl *Ledger) CreateNextBlock(messages []*cb.Envelope, preRefNum int) *cb.Block {
+func (fl *Ledger) CreateNextBlock(messages []*cb.Envelope, preRefNum int) (*cb.Block, *LedgerInfo) {
 	var err error
 	blockData := &cb.BlockData{Data: make([][]byte, len(messages))}
 	for i, msg := range messages {
@@ -104,17 +114,25 @@ func (fl *Ledger) CreateNextBlock(messages []*cb.Envelope, preRefNum int) *cb.Bl
 
 	digest := blkstorage.BlockHeaderDigest(header)
 	fl.preBlocksDigest[digest] = preDigest
+	fl.roundTransactionNums += int64(len(messages))
 	fl.roundBlockNums[fl.round]++
 	fl.roundPreRefNums[fl.round] += globleconfig.PostReference
 	fl.setRoundDigestPost(fl.round, digest, globleconfig.PostReference)
 	fl.digestToHash[digest] = blkstorage.BlockHeaderHash(header)
 
+	ledgerInfo := &LedgerInfo{IsFull: false}
+
 	if isFull {
-		log.Println("round ", fl.round, "'s num of Blocks: ", fl.roundBlockNums[fl.round])
+		// log.Println("round ", fl.round, "'s num of Blocks: ", fl.roundBlockNums[fl.round])
+		ledgerInfo.IsFull = true
+		ledgerInfo.Round = fl.round
+		ledgerInfo.RoundBlockNums = fl.roundBlockNums[fl.round]
+		ledgerInfo.RoundTransactionNums = fl.roundTransactionNums
+		fl.roundTransactionNums = 0
 		fl.round++
 	}
 
-	return block
+	return block, ledgerInfo
 }
 
 func (fl *Ledger) choosePreBlocksDigestAndIsFull(preRefNum int) ([]string, bool) {
