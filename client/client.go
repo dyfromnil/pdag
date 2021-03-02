@@ -81,6 +81,7 @@ func (client *Client) GenEnv() {
 					ClientAddr: globleconfig.ClientAddr,
 				}
 				j++
+				time.Sleep(time.Millisecond)
 			}
 		}()
 	}
@@ -171,7 +172,7 @@ func (client *Client) updateReceiveNumsOrCheckPoint() {
 			tps := int(float64(client.receiveNums-client.lastCheckPoint.receNums) / interval)
 			client.lastCheckPoint.receNums = client.receiveNums
 			client.lastCheckPoint.timeStamp = now
-			client.file.WriteString(fmt.Sprintln(time.Now(), " The current tps: ", tps))
+			client.file.WriteString(fmt.Sprintln(tps))
 		}
 	}
 }
