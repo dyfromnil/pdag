@@ -2,7 +2,7 @@ package globleconfig
 
 const (
 	//NumOfClient for
-	NumOfClient = 1
+	NumOfClient = 3
 
 	//PreferredMaxBytes is
 	PreferredMaxBytes = 1024 * 1024 * 3
@@ -13,11 +13,13 @@ const (
 
 	//PostReference for
 	PostReference = 3
-	//PbftNumOfGoroutine for
-	PbftNumOfGoroutine = 1
+	//PreReference for
+	PreReference = 6
+	//NumOfConsensusGoroutine for
+	NumOfConsensusGoroutine = 3
 
 	//Rate for
-	Rate = 0.7
+	Rate = 0.85
 
 	//BlockStorageDir is
 	BlockStorageDir = "./"
