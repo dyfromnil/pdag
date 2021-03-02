@@ -24,8 +24,8 @@ func NewSupport(lg blockledger.ReadWriter, ident msp.IdentityProvider) *Support 
 }
 
 //CreateNextBlock for
-func (s *Support) CreateNextBlock(messages []*cb.Envelope, preRefNum int) (*cb.Block, *blockledger.LedgerInfo) {
-	return s.ReadWriter.CreateNextBlock(messages, preRefNum)
+func (s *Support) CreateNextBlock(messages []*cb.Envelope, NumOfTransactionsInPool int) *cb.Block {
+	return s.ReadWriter.CreateNextBlock(messages, NumOfTransactionsInPool)
 }
 
 //Append for

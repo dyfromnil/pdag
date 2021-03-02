@@ -31,13 +31,6 @@ type chain struct {
 	support  consensus.ConsenterSupport
 	sendChan chan *message
 	exitChan chan struct{}
-	// blockChan chan *cb.Block
-
-	roundCreateTransactionNums int64 //当前round创建时交易池中的交易数量
-
-	lastEnvWaitingNum int     //上一时刻等待被打包的transaction数量
-	lastDiff          float32 //上次的diff
-	lastPreRef        int     //上个区块的前驱引用数
 
 	lock  sync.Mutex
 	cntCh chan bool
@@ -46,8 +39,6 @@ type chain struct {
 	numsOfCommitedBlocks int              //已commit的区块数量
 	totalDelay           int64            //已commit的区块的总确认延迟
 	fileOfDelay          *os.File         //记录区块确认延迟
-	fileOfRefNum         *os.File         //记录索引数和交易池中的交易数量变化
-	fileOfRoundBlockNum  *os.File         //记录当前层区块数量和层结束时与创建时交易总量的变化
 
 	blockPool           map[string]*cb.Block       //临时消息池，消息摘要对应消息本体
 	prePareConfirmCount map[string]map[string]bool //存放收到的prepare数量(至少需要收到并确认2f个)，根据摘要来对应
@@ -96,34 +87,17 @@ func newChain(support consensus.ConsenterSupport) *chain {
 	if err != nil {
 		log.Fatal("error opening delay log file writer for file delay.log")
 	}
-	fileOfRefNum, err := os.OpenFile("./log/refNum.csv", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
-	if err != nil {
-		log.Fatal("error opening refNum log file writer for file refNum.csv")
-	}
-	fileOfRoundBlockNum, err := os.OpenFile("./log/roundBlockNum.csv", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
-	if err != nil {
-		log.Fatal("error opening roundBlockNum log file writer for file roundBlockNum.csv")
-	}
-
 	return &chain{
 		support:  support,
-		sendChan: make(chan *message, 20000),
+		sendChan: make(chan *message, 200000),
 		exitChan: make(chan struct{}),
 		// blockChan: make(chan *cb.Block, 20),
-		cntCh: make(chan bool, globleconfig.PbftNumOfGoroutine), //num of pbft goroutines
-
-		roundCreateTransactionNums: 0,
-
-		lastEnvWaitingNum: 0,
-		lastDiff:          1,
-		lastPreRef:        1,
+		cntCh: make(chan bool, globleconfig.NumOfConsensusGoroutine), //num of pbft goroutines
 
 		createTime:           make(map[string]int64),
 		numsOfCommitedBlocks: 0,
 		totalDelay:           0,
 		fileOfDelay:          fileOfDelay,
-		fileOfRefNum:         fileOfRefNum,
-		fileOfRoundBlockNum:  fileOfRoundBlockNum,
 
 		blockPool:           make(map[string]*cb.Block),
 		prePareConfirmCount: make(map[string]map[string]bool),
@@ -177,27 +151,6 @@ func (ch *chain) Errored() <-chan struct{} {
 	return ch.exitChan
 }
 
-func max(a int, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func min(a int, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func abs(a float32) float32 {
-	if a < 0 {
-		a = -a
-	}
-	return a
-}
-
 func (ch *chain) prePrepare() {
 	for {
 		msg := <-ch.sendChan
@@ -205,52 +158,10 @@ func (ch *chain) prePrepare() {
 
 		for _, batch := range batches {
 			ch.cntCh <- true
-			tmp := len(ch.sendChan)                                                                                  //当前区块打包时，交易池交易量
-			diff := float32(tmp-ch.lastEnvWaitingNum)*globleconfig.Rate + (1-globleconfig.Rate)*float32(ch.lastDiff) //与上一区块打包时交易池交易量的变化值
 
-			var refNum int
-			var scale float32
-			if diff*ch.lastDiff > 0 {
-				scale = abs(diff / ch.lastDiff)
-			} else {
-				scale = abs((diff - ch.lastDiff) / ch.lastDiff)
-			}
-
-			if diff >= 0 {
-				refNum = int(float32(ch.lastPreRef) / scale)
-				refNum = max(refNum, 1)
-				refNum = min(refNum, globleconfig.PostReference)
-				log.Println("diff>0")
-			} else {
-				refNum = int(float32(ch.lastPreRef) * scale)
-				refNum = max(refNum, globleconfig.PostReference)
-				refNum = min(refNum, 10)
-				log.Println("diff<0")
-			}
-
-			ch.lastPreRef = refNum
-
-			// log.Println("refNum (k) : ", refNum, " tmp: ", tmp, "lastTmp: ", ch.lastEnvWaitingNum, " diff: ", diff, " lastDiff: ", ch.lastDiff, " scale: ", scale)
-			log.Println("refNum : ", refNum, " 当前交易池中待打包交易量: ", tmp)
-			ch.fileOfRefNum.WriteString(fmt.Sprintln(refNum, "\t", tmp))
-
-			block, ledgerInfo := ch.support.CreateNextBlock(batch, refNum)
-			// ch.blockChan <- block
-
-			if ledgerInfo.IsFull {
-				roundTransactionDiff := int64(tmp) + ledgerInfo.RoundTransactionNums - ch.roundCreateTransactionNums
-				log.Println("当前层打包交易数量: ", ledgerInfo.RoundTransactionNums)
-				log.Println("当前round创建时交易池中的交易数量", ch.roundCreateTransactionNums)
-				log.Println("第", ledgerInfo.Round, "层结束时与创建时交易总量的变化: ", roundTransactionDiff, "当前层的区块数量: ", ledgerInfo.RoundBlockNums)
-				ch.fileOfRoundBlockNum.WriteString(fmt.Sprintln(ledgerInfo.Round, "\t", roundTransactionDiff, "\t", ledgerInfo.RoundBlockNums))
-				ch.roundCreateTransactionNums = int64(tmp)
-			}
-
-			ch.lastEnvWaitingNum = tmp
-			ch.lastDiff = diff
-
+			NumOfTransactionsInPool := len(ch.sendChan) //当前区块打包时，交易池交易量
+			block := ch.support.CreateNextBlock(batch, NumOfTransactionsInPool)
 			//获取消息摘要
-			// block := <-ch.blockChan
 			digest := blkstorage.BlockHeaderDigest(block.Header)
 			//log.Printf("已将block存入临时消息池")
 			//存入临时消息池

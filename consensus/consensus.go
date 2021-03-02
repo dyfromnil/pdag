@@ -8,7 +8,6 @@ package consensus
 
 import (
 	"github.com/dyfromnil/pdag/chain/blockcutter"
-	"github.com/dyfromnil/pdag/chain/blockledger"
 	"github.com/dyfromnil/pdag/msp"
 	cb "github.com/dyfromnil/pdag/proto-go/common"
 )
@@ -63,7 +62,7 @@ type Chain interface {
 type ConsenterSupport interface {
 	// BlockCutter returns the block cutting helper for this channel.
 	BlockCutter() blockcutter.Receiver
-	CreateNextBlock(messages []*cb.Envelope, preRefNum int) (*cb.Block, *blockledger.LedgerInfo)
+	CreateNextBlock(messages []*cb.Envelope, NumOfTransactionsInPool int) *cb.Block
 	VerifyCurrentBlock(*cb.Block) bool
 	Append(block *cb.Block) error
 	GetIdendity() msp.IdentityProvider
