@@ -134,29 +134,10 @@ func (fl *Ledger) CreateNextBlock(messages []*cb.Envelope, NumOfTransactionsInPo
 		Round:        fl.round,
 		Timestamp:    time.Now().UnixNano(),
 	}
-
 	block := blkstorage.NewBlock(header, blockData)
-
 	digest := blkstorage.BlockHeaderDigest(header)
-	fl.preBlocksDigest[digest] = preDigest
-	fl.roundTransactionNums += int64(len(messages))
-	fl.roundBlockNums[fl.round]++
-	fl.roundPreRefNums[fl.round] += globleconfig.PostReference
-	fl.setRoundDigestPost(fl.round, digest, globleconfig.PostReference)
-	fl.digestToHash[digest] = blkstorage.BlockHeaderHash(header)
 
-	if isFull {
-		roundTransactionDiff := int64(NumOfTransactionsInPool) + fl.roundTransactionNums - fl.roundCreateTransactionNums
-		log.Println("当前层打包交易数量: ", fl.roundTransactionNums)
-		log.Println("当前round创建时交易池中的交易数量", fl.roundCreateTransactionNums)
-		log.Println("第", fl.round, "层结束时与创建时交易总量的变化: ", roundTransactionDiff, "当前层平均交易速率（tps/区块）", roundTransactionDiff/int64(fl.roundBlockNums[fl.round]), "当前层的区块数量: ", fl.roundBlockNums[fl.round])
-		fl.fileOfRoundBlockNum.WriteString(fmt.Sprintln(fl.round, "\t", roundTransactionDiff, "\t", roundTransactionDiff/int64(fl.roundBlockNums[fl.round]), "\t", fl.roundBlockNums[fl.round]))
-
-		// log.Println("round ", fl.round, "'s num of Blocks: ", fl.roundBlockNums[fl.round])
-		fl.roundTransactionNums = 0
-		fl.round++
-		fl.roundCreateTransactionNums = int64(NumOfTransactionsInPool)
-	}
+	fl.updateLedgerInfo(digest, preDigest, len(messages), header, isFull, NumOfTransactionsInPool)
 
 	return block
 }
@@ -203,6 +184,28 @@ func (fl *Ledger) choosePreBlocksDigestAndIsFull(preRefNum int) ([]string, bool)
 	// 	}
 	// }
 	return dgts, isFull
+}
+
+func (fl *Ledger) updateLedgerInfo(digest string, preDigest []string, messagesLen int, header *cb.BlockHeader, isFull bool, NumOfTransactionsInPool int) {
+	fl.preBlocksDigest[digest] = preDigest
+	fl.roundTransactionNums += int64(messagesLen)
+	fl.roundBlockNums[fl.round]++
+	fl.roundPreRefNums[fl.round] += globleconfig.PostReference
+	fl.setRoundDigestPost(fl.round, digest, globleconfig.PostReference)
+	fl.digestToHash[digest] = blkstorage.BlockHeaderHash(header)
+
+	if isFull {
+		roundTransactionDiff := int64(NumOfTransactionsInPool) + fl.roundTransactionNums - fl.roundCreateTransactionNums
+		log.Println("当前层打包交易数量: ", fl.roundTransactionNums)
+		log.Println("当前round创建时交易池中的交易数量", fl.roundCreateTransactionNums)
+		log.Println("第", fl.round, "层结束时与创建时交易总量的变化: ", roundTransactionDiff, "当前层平均交易速率（tps/区块）", roundTransactionDiff/int64(fl.roundBlockNums[fl.round]), "当前层的区块数量: ", fl.roundBlockNums[fl.round])
+		fl.fileOfRoundBlockNum.WriteString(fmt.Sprintln(fl.round, "\t", roundTransactionDiff, "\t", roundTransactionDiff/int64(fl.roundBlockNums[fl.round]), "\t", fl.roundBlockNums[fl.round]))
+
+		// log.Println("round ", fl.round, "'s num of Blocks: ", fl.roundBlockNums[fl.round])
+		fl.roundTransactionNums = 0
+		fl.round++
+		fl.roundCreateTransactionNums = int64(NumOfTransactionsInPool)
+	}
 }
 
 func (fl *Ledger) computePreRefNum(NumOfTransactionsInPool int) int {
