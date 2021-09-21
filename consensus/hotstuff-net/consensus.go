@@ -149,7 +149,6 @@ func (ch *chain) Errored() <-chan struct{} {
 func (ch *chain) propose() {
 	for {
 		msg := <-ch.sendChan
-		log.Println("???????????????????????")
 		batches, _ := ch.support.BlockCutter().Ordered(msg.normalMsg)
 
 		for _, batch := range batches {
@@ -203,7 +202,6 @@ func (ch *chain) broadcastProposal(proposal *cb.ProposeMsg) {
 
 //HandlePrePrepare for
 func (hs *Server) OnReceiveProposal(ctx context.Context, proposeMsg *cb.ProposeMsg) (*cb.Response, error) {
-	log.Println("---------------------------------------------------------????????????????--------------------------")
 	hs.ch.lock.Lock()
 	defer hs.ch.lock.Unlock()
 	//log.Printf("本节点已接收到主节点发来的PrePrepare ...")
@@ -281,9 +279,6 @@ func (hs *Server) OnReceiveVote(ctx context.Context, voteMsg *cb.VoteMsg) (*cb.R
 			}
 			go tcpDial(replyBytes, globleconfig.ClientAddr)
 			hs.ch.isReply[voteMsg.Digest] = true
-
-			log.Println("-----replay------success----------------------------------")
-
 		}
 	}
 	return &cb.Response{ResCode: true}, nil

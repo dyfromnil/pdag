@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/dyfromnil/pdag/chain/blkstorage"
 	"github.com/dyfromnil/pdag/globleconfig"

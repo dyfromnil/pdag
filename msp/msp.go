@@ -171,5 +171,5 @@ func (iden *Identity) GetAddr(nodeID string) string {
 
 //GetLeaderAddr for
 func (iden *Identity) GetLeaderAddr() string {
-	return iden.clusterAddrs[globleconfig.NodeTable[globleconfig.LeaderNodeID]]
+	return iden.clusterAddrs[globleconfig.LeaderNodeID]
 }
