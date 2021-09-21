@@ -12,7 +12,9 @@ import (
 	"github.com/dyfromnil/pdag/chain/blkstorage"
 	"github.com/dyfromnil/pdag/chain/blockledger"
 	"github.com/dyfromnil/pdag/consensus"
-	"github.com/dyfromnil/pdag/consensus/pbft"
+
+	// "github.com/dyfromnil/pdag/consensus/pbft"
+	hotstuffnet "github.com/dyfromnil/pdag/consensus/hotstuff-net"
 	"github.com/dyfromnil/pdag/globleconfig"
 	"github.com/dyfromnil/pdag/msp"
 	cb "github.com/dyfromnil/pdag/proto-go/common"
@@ -43,14 +45,14 @@ func Main() {
 	chainSupport := chain.NewSupport(ledger, idt)
 
 	//--------- consensus start ---------
-	pbftServer := pbft.NewServer(chainSupport)
-	pbftServer.Start()
+	hotStuffServer := hotstuffnet.NewServer(chainSupport)
+	hotStuffServer.Start()
 
 	//------------ Leader Node listen Envelopes from clients to envCh -----------
 	if nodeID == globleconfig.LeaderNodeID {
 		listenEnv := grpc.NewServer()
 		sendEnvelopsService := &SendEnvelopsService{
-			ch: pbftServer.HandleChain(chainSupport),
+			ch: hotStuffServer.HandleChain(chainSupport),
 		}
 		cb.RegisterSendEnvelopsServer(listenEnv, sendEnvelopsService)
 

@@ -1,6 +1,6 @@
 dag:
-	rm -rf proto-go/*
-	protoc --go_out=plugins=grpc:. ./blockproto/block.proto
+	rm -rf proto-go/common/*
+	protoc --go_out=plugins=grpc:. ./blockproto/block.proto	
 
 build:export CGO_ENABLED=0
 build:

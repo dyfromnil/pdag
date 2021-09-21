@@ -162,7 +162,8 @@ func (client *Client) updateReceiveNumsOrCheckPoint() {
 		select {
 		case msg := <-client.procRepCh:
 			client.receivePool[msg.Digest]++
-			if client.receivePool[msg.Digest] > len(globleconfig.NodeTable)/3*2 && !client.isChecked[msg.Digest] {
+			// if client.receivePool[msg.Digest] > len(globleconfig.NodeTable)/3*2 && !client.isChecked[msg.Digest] {
+			if !client.isChecked[msg.Digest] {
 				client.receiveNums += msg.NumOfTranc
 				client.isChecked[msg.Digest] = true
 			}

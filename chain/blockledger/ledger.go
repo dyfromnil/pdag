@@ -196,9 +196,9 @@ func (fl *Ledger) updateLedgerInfo(digest string, preDigest []string, messagesLe
 
 	if isFull {
 		roundTransactionDiff := int64(NumOfTransactionsInPool) + fl.roundTransactionNums - fl.roundCreateTransactionNums
-		log.Println("当前层打包交易数量: ", fl.roundTransactionNums)
-		log.Println("当前round创建时交易池中的交易数量", fl.roundCreateTransactionNums)
-		log.Println("第", fl.round, "层结束时与创建时交易总量的变化: ", roundTransactionDiff, "当前层平均交易速率（tps/区块）", roundTransactionDiff/int64(fl.roundBlockNums[fl.round]), "当前层的区块数量: ", fl.roundBlockNums[fl.round])
+		// log.Println("当前层打包交易数量: ", fl.roundTransactionNums)
+		// log.Println("当前round创建时交易池中的交易数量", fl.roundCreateTransactionNums)
+		// log.Println("第", fl.round, "层结束时与创建时交易总量的变化: ", roundTransactionDiff, "当前层平均交易速率（tps/区块）", roundTransactionDiff/int64(fl.roundBlockNums[fl.round]), "当前层的区块数量: ", fl.roundBlockNums[fl.round])
 		fl.fileOfRoundBlockNum.WriteString(fmt.Sprintln(fl.round, "\t", roundTransactionDiff, "\t", roundTransactionDiff/int64(fl.roundBlockNums[fl.round]), "\t", fl.roundBlockNums[fl.round]))
 
 		// log.Println("round ", fl.round, "'s num of Blocks: ", fl.roundBlockNums[fl.round])
@@ -224,12 +224,12 @@ func (fl *Ledger) computePreRefNum(NumOfTransactionsInPool int) int {
 		preRefNum = int(float32(fl.lastPreRef) / scale)
 		preRefNum = max(preRefNum, 1)
 		preRefNum = min(preRefNum, globleconfig.PostReference)
-		log.Println("diff>0")
+		// log.Println("diff>0")
 	} else {
 		preRefNum = int(float32(fl.lastPreRef) * scale)
 		preRefNum = max(preRefNum, globleconfig.PostReference+1)
 		preRefNum = min(preRefNum, globleconfig.PreReference)
-		log.Println("diff<0")
+		// log.Println("diff<0")
 	}
 
 	fl.lastPreRef = preRefNum
@@ -248,7 +248,7 @@ func (fl *Ledger) computePreRefNum(NumOfTransactionsInPool int) int {
 	fl.lastEnvWaitingNum = NumOfTransactionsInPool
 	fl.lastDiff = diff
 
-	log.Println("preRefNum: ", preRefNum)
+	// log.Println("preRefNum: ", preRefNum)
 	return preRefNum
 }
 

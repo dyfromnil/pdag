@@ -74,3 +74,20 @@ service Pbft {
     rpc HandlePrepare(PrepareMsg) returns (Response) {}
     rpc HandleCommit(CommitMsg) returns (Response) {}
 }
+
+message ProposeMsg {
+    Block block = 1;
+    string digest = 2;
+    bytes sign =3;
+}
+
+message VoteMsg {
+    string digest = 1;
+    bytes sign =2;
+    string nodeID = 3;
+}
+
+service HotStuff {
+    rpc OnReceiveProposal(ProposeMsg) returns (Response) {}
+    rpc OnReceiveVote (VoteMsg) returns (Response) {};
+}

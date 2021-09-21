@@ -27,6 +27,7 @@ type IdentityProvider interface {
 	GetNodeID() string
 	GetAddr(nodeID string) string
 	GetSelfAddr() string
+	GetLeaderAddr() string
 }
 
 type keyPair struct {
@@ -166,4 +167,9 @@ func (iden *Identity) GetSelfAddr() string {
 //GetAddr for
 func (iden *Identity) GetAddr(nodeID string) string {
 	return iden.clusterAddrs[nodeID]
+}
+
+//GetLeaderAddr for
+func (iden *Identity) GetLeaderAddr() string {
+	return iden.clusterAddrs[globleconfig.NodeTable[globleconfig.LeaderNodeID]]
 }

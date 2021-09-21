@@ -23,8 +23,8 @@ import (
 
 // Server for
 type Server struct {
-	ch    *chain
-	envCh chan cb.Envelope
+	ch *chain
+	// envCh chan cb.Envelope
 }
 
 type chain struct {
@@ -70,12 +70,12 @@ func (pb *Server) Start() {
 
 	lis, err := net.Listen("tcp", pb.ch.support.GetIdendity().GetSelfAddr())
 	if err != nil {
-		//log.Fatalf("net.Listen err: %v", err)
+		log.Fatalf("net.Listen err: %v", err)
 	}
 	go server.Serve(lis)
 	pb.ch.Start()
 	if pb.ch.support.GetIdendity().GetNodeID() == globleconfig.LeaderNodeID {
-		go pb.ch.prePrepare()
+		go pb.ch.proposal()
 	}
 }
 
@@ -151,9 +151,10 @@ func (ch *chain) Errored() <-chan struct{} {
 	return ch.exitChan
 }
 
-func (ch *chain) prePrepare() {
+func (ch *chain) proposal() {
 	for {
 		msg := <-ch.sendChan
+		log.Println("-----------??????????-------------??????????")
 		batches, _ := ch.support.BlockCutter().Ordered(msg.normalMsg)
 
 		for _, batch := range batches {
@@ -195,7 +196,7 @@ func (ch *chain) broadcastPrePrepare(pp *cb.PrePrepareMsg) {
 		go func(i string) {
 			conn, err := grpc.Dial(i, grpc.WithInsecure())
 			if err != nil {
-				//log.Fatalf("grpc.Dial err: %v", err)
+				log.Fatalf("grpc.Dial err: %v", err)
 			}
 			defer conn.Close()
 
@@ -203,7 +204,7 @@ func (ch *chain) broadcastPrePrepare(pp *cb.PrePrepareMsg) {
 			_, err = client.HandlePrePrepare(context.Background(), pp)
 			// resp, err := client.HandlePrePrepare(context.Background(), pp)
 			if err != nil {
-				//log.Fatalf("client.Search err: %v", err)
+				log.Fatalf("client.Search err: %v", err)
 			}
 			// //log.Printf("resp: %t", resp.GetResCode())
 		}(i)
@@ -218,14 +219,14 @@ func (ch *chain) broadcastPrepare(p *cb.PrepareMsg) {
 		go func(i string) {
 			conn, err := grpc.Dial(i, grpc.WithInsecure())
 			if err != nil {
-				//log.Fatalf("grpc.Dial err: %v", err)
+				log.Fatalf("grpc.Dial err: %v", err)
 			}
 			defer conn.Close()
 
 			client := cb.NewPbftClient(conn)
 			_, err = client.HandlePrepare(context.Background(), p)
 			if err != nil {
-				//log.Fatalf("client.Search err: %v", err)
+				log.Fatalf("client.Search err: %v", err)
 			}
 			// //log.Printf("resp: %t", resp.GetResCode())
 		}(i)
@@ -240,14 +241,14 @@ func (ch *chain) broadcastCommit(c *cb.CommitMsg) {
 		go func(i string) {
 			conn, err := grpc.Dial(i, grpc.WithInsecure())
 			if err != nil {
-				//log.Fatalf("grpc.Dial err: %v", err)
+				log.Fatalf("grpc.Dial err: %v", err)
 			}
 			defer conn.Close()
 
 			client := cb.NewPbftClient(conn)
 			_, err = client.HandleCommit(context.Background(), c)
 			if err != nil {
-				//log.Fatalf("client.Search err: %v", err)
+				log.Fatalf("client.Search err: %v", err)
 			}
 			// //log.Printf("resp: %t", resp.GetResCode())
 		}(i)
@@ -277,7 +278,7 @@ func (pb *Server) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*
 	//log.Printf("本节点已接收到主节点发来的PrePrepare ...")
 
 	if !pb.ch.support.VerifyCurrentBlock(pp.Block) {
-		//log.Fatalln("该block与本地账本存在冲突！！！")
+		log.Fatalln("该block与本地账本存在冲突！！！")
 	}
 
 	//获取主节点的公钥，用于数字签名验证
@@ -347,7 +348,7 @@ func (pb *Server) HandlePrePrepare(ctx context.Context, pp *cb.PrePrepareMsg) (*
 				}
 				replyBytes, err := json.Marshal(reply)
 				if err != nil {
-					//log.Fatal("Marshal Error!")
+					log.Fatal("Marshal Error!")
 				}
 				tcpDial(replyBytes, globleconfig.ClientAddr)
 				pb.ch.isReply[c.Digest] = true
@@ -418,7 +419,7 @@ func (pb *Server) HandlePrepare(ctx context.Context, p *cb.PrepareMsg) (*cb.Resp
 				}
 				replyBytes, err := json.Marshal(reply)
 				if err != nil {
-					//log.Fatal("Marshal Error!")
+					log.Fatal("Marshal Error!")
 				}
 				tcpDial(replyBytes, globleconfig.ClientAddr)
 				pb.ch.isReply[p.Digest] = true
@@ -485,7 +486,7 @@ func (pb *Server) HandleCommit(ctx context.Context, c *cb.CommitMsg) (*cb.Respon
 			}
 			replyBytes, err := json.Marshal(reply)
 			if err != nil {
-				//log.Fatal("Marshal Error!")
+				log.Fatal("Marshal Error!")
 			}
 			tcpDial(replyBytes, globleconfig.ClientAddr)
 			pb.ch.isReply[c.Digest] = true
@@ -513,7 +514,7 @@ func tcpDial(context []byte, addr string) {
 
 	_, err = conn.Write(context)
 	if err != nil {
-		//log.Fatal(err)
+		log.Fatal(err)
 	}
 	conn.Close()
 }
