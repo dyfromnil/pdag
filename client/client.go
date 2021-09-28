@@ -58,8 +58,8 @@ func NewClient(n int) *Client {
 		isChecked:      make(map[string]bool),
 		receiveNums:    0,
 		lastCheckPoint: checkPoint{0, 0},
-		envCh:          make(chan *cb.Envelope, 2000),
-		procRepCh:      make(chan *Msg, 2000),
+		envCh:          make(chan *cb.Envelope, 200000),
+		procRepCh:      make(chan *Msg, 200000),
 		StopCh:         make(chan os.Signal),
 		file:           file,
 	}
@@ -81,7 +81,6 @@ func (client *Client) GenEnv() {
 					ClientAddr: globleconfig.ClientAddr,
 				}
 				j++
-				time.Sleep(time.Millisecond)
 			}
 		}()
 	}
@@ -101,13 +100,10 @@ func (client *Client) SendEnv() {
 		log.Fatalf("grpc.Dial err: %v", err)
 		panic("Request Error")
 	}
-	i := 0
 	for {
-		// log.Println(i)
-		i++
 		env := <-client.envCh
+		log.Println("客户端交易池:", len(client.envCh))
 		err = stream.Send(env)
-		// time.Sleep(time.Millisecond * 1)
 		if err != nil {
 			panic("Send Error")
 		}
@@ -153,6 +149,7 @@ func (client *Client) ReceiveReplyFromNodes() {
 			log.Fatal("Unmarshal Error", err)
 		}
 		client.procRepCh <- msg
+		log.Println("client接收池:", len(client.procRepCh))
 	}
 }
 

@@ -155,6 +155,7 @@ func (ch *chain) propose() {
 			ch.cntCh <- true
 
 			NumOfTransactionsInPool := len(ch.sendChan) //当前区块打包时，交易池交易量
+			log.Printf("---------------交易池交易量:%d------------", NumOfTransactionsInPool)
 			block := ch.support.CreateNextBlock(batch, NumOfTransactionsInPool)
 			//获取消息摘要
 			digest := blkstorage.BlockHeaderDigest(block.Header)
@@ -237,7 +238,7 @@ func (hs *Server) OnReceiveProposal(ctx context.Context, proposeMsg *cb.ProposeM
 		}
 
 		go hs.ch.Vote(voteMsg)
-		go hs.ch.update(proposeMsg.Block, digest)
+		hs.ch.update(proposeMsg.Block, digest)
 	}
 	return &cb.Response{ResCode: true}, nil
 }

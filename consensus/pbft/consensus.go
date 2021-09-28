@@ -154,7 +154,6 @@ func (ch *chain) Errored() <-chan struct{} {
 func (ch *chain) proposal() {
 	for {
 		msg := <-ch.sendChan
-		log.Println("-----------??????????-------------??????????")
 		batches, _ := ch.support.BlockCutter().Ordered(msg.normalMsg)
 
 		for _, batch := range batches {

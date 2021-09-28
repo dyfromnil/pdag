@@ -14,7 +14,10 @@ func main() {
 	clt := client.NewClient(globleconfig.NumOfClient)
 	go clt.ReceiveReplyFromNodes()
 	go clt.GenEnv()
-	go clt.SendEnv()
+
+	for i := 0; i < globleconfig.NumOfClient; i++ {
+		go clt.SendEnv()
+	}
 
 	clt.WaitGracefulStop()
 }
