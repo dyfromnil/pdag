@@ -20,8 +20,34 @@ build:
 	cp -r experiment/server0/ experiment/server5/
 	cp -r experiment/server0/ experiment/server6/
 	cp -r experiment/server0/ experiment/server7/
+
 	cp -r experiment/server0/ experiment/server8/
 	cp -r experiment/server0/ experiment/server9/
+	cp -r experiment/server0/ experiment/server10/
+	cp -r experiment/server0/ experiment/server11/
+	cp -r experiment/server0/ experiment/server12/
+	cp -r experiment/server0/ experiment/server13/
+	cp -r experiment/server0/ experiment/server14/
+	cp -r experiment/server0/ experiment/server15/
+
+	cp -r experiment/server0/ experiment/server16/
+	cp -r experiment/server0/ experiment/server17/
+	cp -r experiment/server0/ experiment/server18/
+	cp -r experiment/server0/ experiment/server19/
+	cp -r experiment/server0/ experiment/server20/
+	cp -r experiment/server0/ experiment/server21/
+	cp -r experiment/server0/ experiment/server22/
+	cp -r experiment/server0/ experiment/server23/
+
+	cp -r experiment/server0/ experiment/server24/
+	cp -r experiment/server0/ experiment/server25/
+	cp -r experiment/server0/ experiment/server26/
+	cp -r experiment/server0/ experiment/server27/
+	cp -r experiment/server0/ experiment/server28/
+	cp -r experiment/server0/ experiment/server29/
+	cp -r experiment/server0/ experiment/server30/
+	cp -r experiment/server0/ experiment/server31/
+
 
 cli:
 	go build -o experiment/client/main cmd/client/main.go

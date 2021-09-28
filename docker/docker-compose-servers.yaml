@@ -4,6 +4,7 @@ networks:
   dynet:
 
 services: 
+  # part 0
   server0:
     container_name: server0
     image: server:latest
@@ -165,6 +166,8 @@ services:
     networks: 
       - dynet
 
+
+  # part 1
   server8:
     container_name: server8
     image: server:latest
@@ -200,6 +203,448 @@ services:
     volumes: 
       - ../experiment/server9/store:/home/dy/server/store
       - ../experiment/server9/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server10:
+    container_name: server10
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N10
+    volumes: 
+      - ../experiment/server10/store:/home/dy/server/store
+      - ../experiment/server10/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server11:
+    container_name: server11
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N11
+    volumes: 
+      - ../experiment/server11/store:/home/dy/server/store
+      - ../experiment/server11/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server12:
+    container_name: server12
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N12
+    volumes: 
+      - ../experiment/server12/store:/home/dy/server/store
+      - ../experiment/server12/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+  
+  server13:
+    container_name: server13
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N13
+    volumes: 
+      - ../experiment/server13/store:/home/dy/server/store
+      - ../experiment/server13/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server14:
+    container_name: server14
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N14
+    volumes: 
+      - ../experiment/server14/store:/home/dy/server/store
+      - ../experiment/server14/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server15:
+    container_name: server15
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N15
+    volumes: 
+      - ../experiment/server15/store:/home/dy/server/store
+      - ../experiment/server15/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  # part2
+  server16:
+    container_name: server16
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N16
+    volumes: 
+      - ../experiment/server16/store:/home/dy/server/store
+      - ../experiment/server16/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server17:
+    container_name: server17
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N17
+    volumes: 
+      - ../experiment/server17/store:/home/dy/server/store
+      - ../experiment/server17/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server18:
+    container_name: server18
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N18
+    volumes: 
+      - ../experiment/server18/store:/home/dy/server/store
+      - ../experiment/server18/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server19:
+    container_name: server19
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N19
+    volumes: 
+      - ../experiment/server19/store:/home/dy/server/store
+      - ../experiment/server19/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server20:
+    container_name: server20
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N20
+    volumes: 
+      - ../experiment/server20/store:/home/dy/server/store
+      - ../experiment/server20/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server21:
+    container_name: server21
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N21
+    volumes: 
+      - ../experiment/server21/store:/home/dy/server/store
+      - ../experiment/server21/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server22:
+    container_name: server22
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N22
+    volumes: 
+      - ../experiment/server22/store:/home/dy/server/store
+      - ../experiment/server22/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server23:
+    container_name: server23
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N23
+    volumes: 
+      - ../experiment/server23/store:/home/dy/server/store
+      - ../experiment/server23/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  #part 3
+  server24:
+    container_name: server24
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N24
+    volumes: 
+      - ../experiment/server24/store:/home/dy/server/store
+      - ../experiment/server24/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server25:
+    container_name: server25
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N25
+    volumes: 
+      - ../experiment/server25/store:/home/dy/server/store
+      - ../experiment/server25/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server26:
+    container_name: server26
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N26
+    volumes: 
+      - ../experiment/server26/store:/home/dy/server/store
+      - ../experiment/server26/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server27:
+    container_name: server27
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N27
+    volumes: 
+      - ../experiment/server27/store:/home/dy/server/store
+      - ../experiment/server27/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server28:
+    container_name: server28
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N28
+    volumes: 
+      - ../experiment/server28/store:/home/dy/server/store
+      - ../experiment/server28/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server29:
+    container_name: server29
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N29
+    volumes: 
+      - ../experiment/server29/store:/home/dy/server/store
+      - ../experiment/server29/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server30:
+    container_name: server30
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N30
+    volumes: 
+      - ../experiment/server30/store:/home/dy/server/store
+      - ../experiment/server30/Keys:/home/dy/server/Keys
+    # ports: 
+    
+    networks: 
+      - dynet
+
+  server31:
+    container_name: server31
+    image: server:latest
+    privileged: true
+    working_dir: /home/dy/server
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /home/dy/server
+        tc qdisc add dev eth0 root netem delay $DELAY $JITTER
+        ./main N31
+    volumes: 
+      - ../experiment/server31/store:/home/dy/server/store
+      - ../experiment/server31/Keys:/home/dy/server/Keys
     # ports: 
     
     networks: 
